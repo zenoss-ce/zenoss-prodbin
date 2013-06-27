@@ -31,6 +31,11 @@
         <link rel="stylesheet" type="text/css"
               tal:attributes="href python: context.zport.getVersionedResourcePath('/++resource++zenui/css/zenui3.css')"
             />
+
+        <link rel="stylesheet" type="text/css"
+              tal:attributes="href python: context.zport.getVersionedResourcePath('/++resource++zenui/css/nv.d3.css')"
+            />
+
         <tal:block tal:content="structure provider:js-security"/>
         <tal:block tal:content="structure provider:all-js"/>
         <script tal:define="container context/getPrimaryParent" tal:content="string:
@@ -40,6 +45,8 @@
         <tal:block metal:define-slot="head-local"/>
         <tal:block tal:content="structure provider:jssnippets"/>
         <script src="/++resource++zenui/js/zenoss/codemirror/codemirror.js"></script>
+        <script src="/++resource++zenui/js/d3/d3.v3.js"></script>
+        <script src="/++resource++zenui/js/d3/nv.d3.js"></script>
         <link rel="stylesheet" href="/++resource++zenui/js/zenoss/codemirror/codemirror.css" />
         <script src="/++resource++zenui/js/zenoss/codemirror/mode/python/python.js"></script>
 
