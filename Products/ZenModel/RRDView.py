@@ -215,6 +215,7 @@ class RRDView(object):
             for g in template.getGraphDefs():
                 graph = {}
                 graph['title'] = g.getId()
+                graph['metrics'] = [ m.id for m in g.graphPoints() ]
                 try:
                     graph['url'] = self.getGraphDefUrl(g, drange, template)
                     graphs.append(graph)

@@ -91,7 +91,7 @@
             for (tag in this.tags) {
                 tags += tag + "=" + this.tags[tag] + ",";
             }
-            if (this.tags.length > 0) {
+            if (tags != "") {
                 tags = "{" + tags.substr(0, tags.length-1) + "}";
             }
 
@@ -154,6 +154,7 @@
             });
             Zenoss.NVD3Graph.superclass.constructor.call(this, config);            
             this.setRequest(config);
+            this.sendRequest("/query/performance");
         },
 
         setRequest: function(config) {
@@ -161,17 +162,19 @@
             this.request.clientId = config.graphTitle;
             this.request.startDate = "24h-ago";
             this.request.endDate = "now";
+
+            var graphMetrics = config.graphMetrics;
             
-            for (var i = 0; i < this.graphMetrics.length; i++) {
+            for (var i = 0; i < graphMetrics.length; i++) {
                 var query = new QueryData();
                 query.agg = "avg";
                 query.metric = this.graphMetrics[i];
-                query.tags['uuid'] = "*";
-                this.request.query.push(query)
+                query.tags['uid'] = config.uid;
+                this.request.query.push(query);
             }
         },
 
-        sendRequest: function(url, request) {
+        sendRequest: function(url) {
             var ajaxRequest = new AjaxRequest();
 
             ajaxRequest.onreadystatechange = function() {
@@ -182,7 +185,7 @@
                 }
             };
 
-            ajaxRequest.open("GET", url + "?" + request.toStr());
+            ajaxRequest.open("GET", url + "?" + this.request.toStr());
             ajaxRequest.send();            
         },
 
@@ -423,6 +426,7 @@
                 graphId = Ext.id();
                 graph = data[i];
                 graphs.push(new Zenoss.NVD3Graph({
+                    uid: this.uid,
                     graphUrl: graph.url,
                     graphTitle: graph.title,
                     graphId: graphId,

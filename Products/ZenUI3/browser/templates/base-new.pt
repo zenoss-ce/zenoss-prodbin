@@ -46,7 +46,7 @@
         <tal:block tal:content="structure provider:jssnippets"/>
         <script src="/++resource++zenui/js/zenoss/codemirror/codemirror.js"></script>
         <script src="/++resource++zenui/js/d3/d3.v3.js"></script>
-        <script src="/++resource++zenui/js/d3/nv.d3.js"></script>
+        <script src="/++resource++zenui/js/d3/nv.d3.min.js"></script>
         <link rel="stylesheet" href="/++resource++zenui/js/zenoss/codemirror/codemirror.css" />
         <script src="/++resource++zenui/js/zenoss/codemirror/mode/python/python.js"></script>
 
