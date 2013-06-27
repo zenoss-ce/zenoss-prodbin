@@ -8,6 +8,7 @@
 ##############################################################################
 
 
+from datetime import datetime
 import signal
 import time
 import logging
@@ -336,50 +337,50 @@ class CollectorDaemon(RRDDaemon):
 
     def writeRRD(self, path, value, rrdType, rrdCommand=None, cycleTime=None,
                  min='U', max='U', threshEventData={}, timestamp='N', allowStaleDatapoint=True):
-        now = time.time()
+        now = datetime.now().strftime('%Y/%M/%d-%H:%m:%s-CDT')
 
-        self.writeMetric(os.path.basename(path), value, now, os.path.dirname(path))
+        self.writeMetric(os.path.basename(path).split('_')[-1], value, now, os.path.dirname(path))
 
-        # hasThresholds = bool(self._thresholds.byFilename.get(path))
-        # if hasThresholds:
-        #     rrd_write_fn = self._rrd.save
-        # else:
-        #     rrd_write_fn = self._rrd.put            
-        # 
-        # # save the raw data directly to the RRD files
-        # value = rrd_write_fn(
-        #     path,
-        #     value,
-        #     rrdType,
-        #     rrdCommand,
-        #     cycleTime,
-        #     min,
-        #     max,
-        #     timestamp=timestamp,
-        #     allowStaleDatapoint=allowStaleDatapoint,
-        # )
+        hasThresholds = bool(self._thresholds.byFilename.get(path))
+        if hasThresholds:
+            rrd_write_fn = self._rrd.save
+        else:
+            rrd_write_fn = self._rrd.put            
+        
+        # save the raw data directly to the RRD files
+        value = rrd_write_fn(
+            path,
+            value,
+            rrdType,
+            rrdCommand,
+            cycleTime,
+            min,
+            max,
+            timestamp=timestamp,
+            allowStaleDatapoint=allowStaleDatapoint,
+        )
 
-        # # check for threshold breaches and send events when needed
-        # if hasThresholds:
-        #     if 'eventKey' in threshEventData:
-        #         eventKeyPrefix = [threshEventData['eventKey']]
-        #     else:
-        #         eventKeyPrefix = [path.rsplit('/')[-1]]
+        # check for threshold breaches and send events when needed
+        if hasThresholds:
+            if 'eventKey' in threshEventData:
+                eventKeyPrefix = [threshEventData['eventKey']]
+            else:
+                eventKeyPrefix = [path.rsplit('/')[-1]]
 
-        #     for ev in self._thresholds.check(path, now, value):
-        #         parts = eventKeyPrefix[:]
-        #         if 'eventKey' in ev:
-        #             parts.append(ev['eventKey'])
-        #         ev['eventKey'] = '|'.join(parts)
+            for ev in self._thresholds.check(path, now, value):
+                parts = eventKeyPrefix[:]
+                if 'eventKey' in ev:
+                    parts.append(ev['eventKey'])
+                ev['eventKey'] = '|'.join(parts)
 
-        #         # add any additional values for this threshold
-        #         # (only update if key is not in event, or if
-        #         # the event's value is blank or None)
-        #         for key,value in threshEventData.items():
-        #             if ev.get(key, None) in ('',None):
-        #                 ev[key] = value
+                # add any additional values for this threshold
+                # (only update if key is not in event, or if
+                # the event's value is blank or None)
+                for key,value in threshEventData.items():
+                    if ev.get(key, None) in ('',None):
+                        ev[key] = value
 
-        #         self.sendEvent(ev)
+                self.sendEvent(ev)
 
     def readRRD(self, path, consolidationFunction, start, end):
         return RRDUtil.read(path, consolidationFunction, start, end)
