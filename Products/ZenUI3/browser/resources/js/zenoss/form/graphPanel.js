@@ -23,285 +23,205 @@
      * so setting lower.
      **/
     GRAPHPAGESIZE = Ext.isIE ? 25 : 50;
+
     /**********************************************************************
      *
-     * Swoopy
+     * NVD3 Graph Display
      *
      */
-    function toISOTimestamp(d) {
-        function pad(n){
-            return n<10 ? '0'+n : n;
-        }
-        return d.getUTCFullYear()+'-'
-            + pad(d.getUTCMonth()+1)+'-'
-            + pad(d.getUTCDate())+'T'
-            + pad(d.getUTCHours())+':'
-            + pad(d.getUTCMinutes())+':'
-            + pad(d.getUTCSeconds())+'Z';
-    }
-
-    Date.prototype.minus = function(secs) {
-        return new Date(this.valueOf()-(secs*1000));
-    };
-
-    Date.prototype.toPretty = function() {
-        return toISOTimestamp(this);
-    };
-
-    function fixBase64Padding(s) {
-        s = s.split('=',1)[0];
-        var a = [s];
-        for (var i = 0; i <= 4 - (s.length % 4); i++) {
-            a.push('=');
-        }
-        return a.join('');
-    }
-
-    var ZenGraphs = ZenGraphs || {},
-        zoom_factor = 1.5,
-        pan_factor = 3,
-        end_re = /now-([0-9]*)s/,
-        start_re = /end-([0-9]*)s/;
 
     Ext.ns('Zenoss');
 
-    Zenoss.SWOOP_CALLBACKS = {};
+    function AjaxRequest() {
+        var ACTIVEXMODES = ["Msxml2.XMLHTTP.6.0", "Msxml2.XMLHTTP.3.0",
+                            "Msxml2.XMLHTTP"];
+        if (window.ActiveXObject) {
+            for (var i = 0; i < ACTIVEXMODES.length; i++) {
+                try {
+                    return new ActiveXObject(ACTIVEXMODES[i]);
+                } catch (e) {}
+            }
+        } else if (window.XMLHttpRequest) {
+            return new XMLHttpRequest();
+        }
 
-    Zenoss.SwoopyGraph = Ext.extend(Ext.Panel, {
+        return false;
+    }
+
+    function QueryRequest(){
+        this.clientId = "";
+        this.startDate = "";
+        this.endDate = "";
+        this.isExact = true;
+        this.isSeries = false;
+        this.query = [];
+
+        this.toStr = function() {
+            var clientId = this.clientId?"id=" + this.clientId + "&": "";
+            var startDate = "start=" + this.startDate + "&";
+            var endDate = "end=" + this.endDate + "&";
+            var isExact = "exact=" + (this.isExact?"true":"false") + "&";
+            var isSeries = "series=" + (this.isSeries?"true":"false") + "&";
+            var query = "";
+
+            for (var i = 0; i < this.query.length; i++) {
+                query += this.query[i].toStr() + "&";
+            }
+
+            var ret = clientId + startDate + endDate + isExact + isSeries + query;
+            ret = ret.substr(0, ret.length-1); // Strip the last ampersand (&)
+            return ret;
+        };
+    }
+
+    function QueryData() {
+        this.agg = "" // min | max | sum | avg
+        this.rate = "";
+        this.downsample = "";
+        this.metric = "";
+        this.tags = {};
+
+        this.toStr = function() {
+            var agg = this.agg + ":";
+            var rate = this.rate?this.rate + ":" : "";
+            var downsample = this.downsample? this.downsample + ":" : "";
+            var metric = this.metric;
+            var tags = "";
+
+            for (tag in this.tags) {
+                tags += tag + "=" + this.tags[tag] + ",";
+            }
+            if (tags != "") {
+                tags = "{" + tags.substr(0, tags.length-1) + "}";
+            }
+
+            return "query=" + agg + rate + downsample + metric + tags;
+        };
+    }
+
+    function QueryResponse() {
+        this.clientId = "";
+        this.source = "";
+        this.startTime = "";
+        this.startTimeActual = "";
+        this.endTime = "";
+        this.endTimeActual = "";
+        this.isExact = true;
+        this.isSeries = false;
+        this.results = [];
+
+        this.convertFromJSON = function(data) {
+            this.clientId = data["clientId"];
+            this.source = data["source"];
+            this.startTime = data["startTime"];
+            this.startTimeActual = data["startTimeActual"];
+            this.endTime = data["endTime"];
+            this.endTimeActual = data["endTimeActual"];
+            this.isExact = data["exactTimeWindow"];
+            this.isSeries = data["series"];
+
+            var results = data["results"];
+            var data = {};
+            for (var i = 0; i < results.length; i++) {
+                var metric = results[i]["metric"];
+                var timestamp = results[i]["timestamp"] * 1000; // millisecs
+                var value = results[i]["value"];
+
+                if (!(metric in data)) {
+                    data[metric] = [];
+                }
+                data[metric].push(new Array(timestamp, value));
+            }
+            for (var key in data) {
+                var result = {
+                    "key": key,
+                    "values": data[key],
+                };
+                this.results.push(result);
+            }
+
+            return this;
+        };
+    }
+ 
+    Zenoss.NVD3Graph = Ext.extend(Ext.Panel, {
         constructor: function(config) {
-            var cls = Ext.isGecko ? '-moz-zoom-in' :
-                Ext.isWebKit ? '-webkit-zoom-in' :
-                'crosshair';
             config = Ext.applyIf(config||{}, {
                 html: {
-                    tag: 'img',
-                    src: config.graphUrl,
-                    id: config.graphId,
-                    style: 'cursor:' + cls
+                    tag: 'svg',
                 },
                 width: 607,
-                cls: 'graph-panel',
-                tbar: {
-                    items: [{
-                        xtype: 'tbtext',
-                        text: config.graphTitle
-                    },'->',{
-                        text: '&lt;',
-                        width: 67,
-                        handler: Ext.bind(function(btn, e) {
-                            this.onPanLeft(this);
-                        }, this)
-                    },{
-                        text: _t('Zoom In'),
-                        enableToggle: true,
-                        pressed: true,
-                        ref: '../zoomin',
-                        handler: Ext.bind(function(btn, e) {
-                            this.fireEventsToAll("zoommodechange", this, !btn.pressed);
-                        }, this)
-                    },{
-                        text: _t('Zoom Out'),
-                        ref: '../zoomout',
-                        enableToggle: true,
-                        handler: Ext.bind(function(btn, e) {
-                            this.fireEventsToAll("zoommodechange", this, btn.pressed);
-                        }, this)
-                    },{
-                        text: '&gt;',
-                        width: 67,
-                        handler: Ext.bind(function(btn, e) {
-                            this.onPanRight(this);
-                        }, this)
-                    }]
+            });
+            Zenoss.NVD3Graph.superclass.constructor.call(this, config);            
+            this.setRequest(config);
+            this.sendRequest("/query/performance");
+        },
+
+        setRequest: function(config) {
+            this.request = new QueryRequest();
+            this.request.clientId = config.graphTitle;
+            this.request.startDate = "24h-ago";
+            this.request.endDate = "now";
+
+            var graphMetrics = config.graphMetrics;
+            var uid = config.uid.split('/');
+            var uuid = "Devices/" + uid[uid.length-1];
+            
+            for (var i = 0; i < graphMetrics.length; i++) {
+                var query = new QueryData();
+                query.agg = "avg";
+                query.metric = this.graphMetrics[i];
+                query.tags['uuid'] = uuid;
+                this.request.query.push(query);
+            }
+        },
+
+        sendRequest: function(url) {
+            var ajaxRequest = new AjaxRequest();
+
+            ajaxRequest.onreadystatechange = function() {
+                if (ajaxRequest.readyState == ajaxRequest.DONE) {
+                    var rawData = eval( "(" + ajaxRequest.responseText + ")" );
+                    var response = (new QueryResponse()).convertFromJSON(rawData);
+                    this.displayGraph(response);
                 }
-            });
-            Zenoss.SwoopyGraph.superclass.constructor.call(this, config);
-            this.mustUseImageUri = Ext.isIE;
+            };
+
+            ajaxRequest.open("GET", url + "?" + this.request.toStr());
+            ajaxRequest.send();            
         },
-        initEvents: function() {
-            this.addEvents("zoommodechange", "updateimage");
-            Zenoss.SwoopyGraph.superclass.initEvents.call(this);
-            this.on("zoommodechange", this.onZoomModeChange, this);
-            this.on("updateimage", this.updateImage, this);
-            this.graphEl = Ext.get(this.graphId);
-            this.graphEl.on('click', this.onGraphClick, this);
-            this.graphEl.on('load', function(){
-                this.suspendLayouts();
-                var size = this.graphEl.getSize();
-                // set out panel to be the size of the graph
-                // plus a little for the padding
-                this.setWidth(size.width + 10);
-                this.setHeight(size.height + 42);
-                this.el.setHeight(size.height + 42); /* this line is for chrome */
-                if (!size.width || !size.height){
-                    this.showFailure();
-                } else {
-                    this.parseGraphParams();
-                }
-                this.resumeLayouts(true);
-            }, this, {single:true});
-        },
-        showFailure: function() {
-            this.failureMask = this.failureMask || Ext.DomHelper.insertAfter(this.graphEl, {
-                tag: 'div',
-                html: _t("There was a problem rendering this graph. Either the file does not exist or an error has occurred.  Initial graph creation can take up to 5 minutes.  If the graph still does not appear, look in the Zope log file $ZENHOME/log/event.log for errors.")
-            });
-            var el = Ext.fly(this.failureMask);
-            var size = this.graphEl.getSize();
-            if (!size.width || !size.height) {
-                size = {height:150, width:500};
-            }
-            el.setSize(size);
-            Ext.fly(this.failureMask).setDisplayed(true);
-            this.graphEl.setDisplayed(false);
-        },
-        hideFailure: function() {
-            if (this.failureMask) {
-                this.graphEl.setDisplayed(true);
-                Ext.fly(this.failureMask).setDisplayed(false);
-            }
-        },
-        parseGraphParams: function(url) {
-            url = url || this.graphEl.dom.src;
-            var href = url.split('?'),
-            gp = Ext.apply({url:href[0]}, Ext.urlDecode(href[1]));
-            // Encoding can screw with the '=' padding at the end of gopts, so
-            // strip and recreate it
-            gp.gopts = fixBase64Padding(gp.gopts);
-            gp.width = Number(gp.width);
-            gp.drange = Number(gp.drange);
-            gp.start = Ext.isDefined(gp.start) ? Number(start_re.exec(gp.start)[1]) : gp.drange;
-            gp.end = Ext.isDefined(gp.end) ? Number(end_re.exec(gp.end)[1]) : 0;
-            this.graph_params = gp;
-        },
-        getComment: function(start, end) {
-            var now = new Date(),
-                endDate = now.minus(end).toPretty(),
-                startDate = now.minus(start + end).toPretty();
-            var com_ctr = "\\t\\t to \\t\\t";
-            var comment = startDate + com_ctr + endDate;
-            comment = comment.replace(/:/g, '\\:');
-            return comment;
-        },
-        fireEventsToAll: function() {
-            if (this.linked()) {
-                var args = arguments;
-                Ext.each(this.refOwner.getGraphs(), function(g) {
-                    g.fireEvent.apply(g, args);
+
+        displayGraph: function(response) {
+            var domId = this.id;
+
+            nv.addGraph(function () {
+                var chart = nv.models.cumulativeLineChart()
+                              .x(function(d) { return d[0]; })
+                              .y(function(d) { return d[1]; })
+                              .color(d3.scale.category10().range());
+                chart.xAxis.tickFormat(function(d) {
+                    return d3.time.format('%a %H:%M')(new Date(d));
                 });
-            } else {
-                this.fireEvent.apply(this, arguments);
-            }
-        },
-        linked: function() {
-            return this.isLinked;
-        },
-        setLinked: function(isLinked) {
-            this.isLinked = isLinked;
-        },
-        updateImage: function(params) {
-            /*
-             * params should look like:
-             * {drange:n, start:n, end:n}
-             */
-            var gp = Ext.apply({}, params, this.graph_params);
-            gp.comment = this.getComment(gp.start, gp.end);
-            gp.end = 'now-' + gp.end + 's';
-            gp.start = 'end-' + gp.start + 's';
-            this.sendRequest(gp);
-        },
-        sendRequest: function(params) {
-            var url = params.url,
-                swoopie = this;
-            delete params.url;
-            params.getImage = null;
-            if (this.mustUseImageUri === true) {
-                params.getImage = true;
-            }
-            var now = new Date().getTime();
-            var graphid = now + '_' + this.graphId;
-            params.graphid = graphid;
+                chart.yAxis.tickFormat(d3.format(',.3f'));
 
-            var fullurl = Ext.urlAppend(url, Ext.urlEncode(params));
+                d3.select("#" + domId)
+                  .append("text")
+                  .attr("text-anchor", "middle")
+                  .text(response.clientId);
+            
+                d3.select("#" + domId + " " + "svg")
+                  .datum(response.results)
+                  .transition()
+                  .duration(500)
+                  .call(chart);
 
-            if (this.mustUseImageUri === true) {
-                // IE 6 and 7 Cannoy display data:image stuff in image
-                // src. If it's one of those browsers,
-                // skip the SWOOP stuff and just set the image src.
-                this.graphEl.dom.src = fullurl;
-                this.parseGraphParams(fullurl);
-            } else {
-                Zenoss.SWOOP_CALLBACKS[graphid] = Ext.bind(function(packet) {
-                    var ob = Ext.decode(packet);
-                    if (ob.success) {
-                        this.hideFailure();
-                        this.graphEl.dom.src = "data:image/png;base64," + ob.data;
-                        this.parseGraphParams(fullurl);
-                    } else {
-                        this.showFailure();
-                    }
-                    // Clean up callbacks and script tags
-                    delete Zenoss.SWOOP_CALLBACKS[graphid];
-                    Ext.get(graphid).remove();
-                }, this);
-                var sc = Ext.DomHelper.createDom({
-                    tag: 'script',
-                    id: graphid,
-                    type: 'text/javascript',
-                    src: fullurl
-                });
+                nv.utils.windowResize(chart.update);
 
-                Ext.getDoc().dom.getElementsByTagName('head')[0].appendChild(sc);
-            }
-
-        },
-        onPanLeft: function(graph) {
-            var gp = this.graph_params;
-            var delta = Math.round(gp.drange/pan_factor);
-            var newend = gp.end + delta > 0 ? gp.end + delta : 0;
-            this.fireEventsToAll("updateimage", {end:newend});
-        },
-        onPanRight: function(graph) {
-            var gp = this.graph_params;
-            var delta = Math.round(gp.drange/pan_factor);
-            var newend = gp.end - delta > 0 ? gp.end - delta : 0;
-            this.fireEventsToAll("updateimage", {end:newend});
-        },
-        onZoomModeChange: function(graph, zoomOut) {
-            this.zoomout.toggle(zoomOut);
-            this.zoomin.toggle(!zoomOut);
-            var dir = zoomOut ? 'out' : 'in',
-                cls = Ext.isGecko ? '-moz-zoom-'+dir :
-                (Ext.isWebKit ? '-webkit-zoom-'+dir : 'crosshair');
-            this.graphEl.setStyle({'cursor': cls});
-        },
-        doZoom: function(xpos, factor) {
-            var gp = this.graph_params;
-            if (xpos < 0 || xpos > gp.width) {
-                return;
-            }
-            var drange = Math.round(gp.drange/factor),
-                delta = ((gp.width/2) - xpos) * (gp.drange/gp.width) + (gp.drange - drange)/2,
-                end = Math.round(gp.end + delta >= 0 ? gp.end + delta : 0);
-            this.fireEventsToAll("updateimage", {
-                drange: drange,
-                start: drange,
-                end: end
+                return chart;
             });
         },
-        onGraphClick: function(e) {
-            var graph = e.getTarget(null, null, true),
-                x = e.getPageX() - graph.getX() - 67,
-            func = this.zoomin.pressed ? this.onZoomIn : this.onZoomOut;
-            func.call(this, this, x);
-        },
-        onZoomIn: function(graph, xpos) {
-            this.doZoom(xpos, zoom_factor);
-        },
-        onZoomOut: function(graph, xpos) {
-            this.doZoom(xpos, 1/zoom_factor);
-            }
-        });
+
+    });
 
     /**********************************************************************
      *
@@ -512,10 +432,12 @@
             for (i=start; i < Math.min(end, data.length); i++) {
                 graphId = Ext.id();
                 graph = data[i];
-                graphs.push(new Zenoss.SwoopyGraph({
+                graphs.push(new Zenoss.NVD3Graph({
+                    uid: this.uid,
                     graphUrl: graph.url,
                     graphTitle: graph.title,
                     graphId: graphId,
+                    graphMetrics: graph.metrics,
                     isLinked: this.isLinked,
                     height: 250,
                     ref: graphId
