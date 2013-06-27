@@ -164,12 +164,14 @@
             this.request.endDate = "now";
 
             var graphMetrics = config.graphMetrics;
+            var uid = config.uid.split('/');
+            var uuid = "Devices/" + uid[uid.length-1];
             
             for (var i = 0; i < graphMetrics.length; i++) {
                 var query = new QueryData();
                 query.agg = "avg";
                 query.metric = this.graphMetrics[i];
-                query.tags['uid'] = config.uid;
+                query.tags['uuid'] = uuid;
                 this.request.query.push(query);
             }
         },
@@ -201,6 +203,11 @@
                     return d3.time.format('%a %H:%M')(new Date(d));
                 });
                 chart.yAxis.tickFormat(d3.format(',.3f'));
+
+                d3.select("#" + domId)
+                  .append("text")
+                  .attr("text-anchor", "middle")
+                  .text(response.clientId);
             
                 d3.select("#" + domId + " " + "svg")
                   .datum(response.results)
