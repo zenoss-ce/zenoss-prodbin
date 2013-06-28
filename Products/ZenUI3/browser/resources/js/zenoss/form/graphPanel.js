@@ -32,6 +32,7 @@
 
     Ext.ns('Zenoss');
 
+
     function AjaxRequest() {
         var ACTIVEXMODES = ["Msxml2.XMLHTTP.6.0", "Msxml2.XMLHTTP.3.0",
                             "Msxml2.XMLHTTP"];
@@ -154,7 +155,7 @@
             });
             Zenoss.NVD3Graph.superclass.constructor.call(this, config);            
             this.setRequest(config);
-            this.sendRequest("/query/performance");
+            this.sendRequest("/proxy/query/performance");
         },
 
         setRequest: function(config) {
@@ -165,7 +166,7 @@
 
             var graphMetrics = config.graphMetrics;
             var uid = config.uid.split('/');
-            var uuid = "Devices/" + uid[uid.length-1];
+            var uuid = "Devices/" + uid.slice(uid.indexOf("devices")+1).join("/");
             
             for (var i = 0; i < graphMetrics.length; i++) {
                 var query = new QueryData();
@@ -177,13 +178,15 @@
         },
 
         sendRequest: function(url) {
+            var me = this;
             var ajaxRequest = new AjaxRequest();
 
             ajaxRequest.onreadystatechange = function() {
                 if (ajaxRequest.readyState == ajaxRequest.DONE) {
+                    console.log(ajaxRequest.responseText);
                     var rawData = eval( "(" + ajaxRequest.responseText + ")" );
                     var response = (new QueryResponse()).convertFromJSON(rawData);
-                    this.displayGraph(response);
+                    me.displayGraph(response);
                 }
             };
 

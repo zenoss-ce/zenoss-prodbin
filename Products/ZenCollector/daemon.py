@@ -6,9 +6,6 @@
 # License.zenoss under the directory where your Zenoss product is installed.
 # 
 ##############################################################################
-
-
-from datetime import datetime
 import signal
 import time
 import logging
@@ -337,7 +334,7 @@ class CollectorDaemon(RRDDaemon):
 
     def writeRRD(self, path, value, rrdType, rrdCommand=None, cycleTime=None,
                  min='U', max='U', threshEventData={}, timestamp='N', allowStaleDatapoint=True):
-        now = datetime.now().strftime('%Y/%M/%d-%H:%m:%s-CDT')
+        now = int(time.time())
 
         self.writeMetric(os.path.basename(path).split('_')[-1], value, now, os.path.dirname(path))
 
