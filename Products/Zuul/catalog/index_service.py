@@ -59,6 +59,11 @@ class AdvancedQueryToElastic(object):
             }
         }}
 
+    def _convert_Not(self, query):
+        return {"not": {"filter":
+            self._convert(query._query)
+        }}
+
     _PREFIX_PATTERN = re.compile(r"^[^\*\?]+\*+$")
     def _convert_MatchGlob(self, query):
         term = query._term
@@ -92,6 +97,7 @@ class AdvancedQueryToElastic(object):
         Generic: _convert_Generic,
         And: _convert_And,
         Or: _convert_Or,
+        Not: _convert_Not,
     }
 
     def _convert(self, query):

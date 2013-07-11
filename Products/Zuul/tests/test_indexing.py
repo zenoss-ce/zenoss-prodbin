@@ -11,40 +11,37 @@ class TestAdvancedQueryToElastic(unittest.TestCase):
     def setUp(self):
         self.converter = AdvancedQueryToElastic()
 
-    def assertSame(self, a, b):
-        self.assertEqual(a, b)
-
     def test_eq(self):
         query = Eq("a", "b")
         result = self.converter._convert(query)
-        self.assertSame(result, {"term": {"a":"b"}})
+        self.assertEquals(result, {"term": {"a":"b"}})
 
     def test_in(self):
         query = In("a", [1, 2, 3])
         result = self.converter._convert(query)
-        self.assertSame(result, {"in": {"a": [1, 2, 3]}})
+        self.assertEquals(result, {"in": {"a": [1, 2, 3]}})
 
     def test_matchregexp(self):
         query = MatchRegexp("a", "^[abc]?.*")
         result = self.converter._convert(query)
-        self.assertSame(result, {"regexp":{"a":"^[abc]?.*"}})
+        self.assertEquals(result, {"regexp":{"a":"^[abc]?.*"}})
 
         query = MatchRegexp("a", "(?i)^[abc]?.*")
         result = self.converter._convert(query)
-        self.assertSame(result, {"regexp":{"a":"(?i)^[abc]?.*"}})
+        self.assertEquals(result, {"regexp":{"a":"(?i)^[abc]?.*"}})
 
         query = MatchRegexp("a", "(?i)abc.*")
         result = self.converter._convert(query)
-        self.assertSame(result, {"prefix":{"a":"abc"}})
+        self.assertEquals(result, {"prefix":{"a":"abc"}})
 
         query = MatchRegexp("a", "(?i).*abc.*")
         result = self.converter._convert(query)
-        self.assertSame(result, {"wildcard":{"a":"*abc*"}})
+        self.assertEquals(result, {"wildcard":{"a":"*abc*"}})
 
     def test_between(self):
         query = Between("a", 10, 20)
         result = self.converter._convert(query)
-        self.assertSame(result, {
+        self.assertEquals(result, {
             "range" : {
                 "a" : { 
                     "from" : 10, 
@@ -58,7 +55,7 @@ class TestAdvancedQueryToElastic(unittest.TestCase):
     def test_ge(self):
         query = Ge("a", 10)
         result = self.converter._convert(query)
-        self.assertSame(result, {
+        self.assertEquals(result, {
             "range": {
                 "a": {
                     "gte": 10
@@ -69,7 +66,7 @@ class TestAdvancedQueryToElastic(unittest.TestCase):
     def test_le(self):
         query = Le("a", 10)
         result = self.converter._convert(query)
-        self.assertSame(result, {
+        self.assertEquals(result, {
             "range": {
                 "a": {
                     "lte": 10
@@ -80,7 +77,7 @@ class TestAdvancedQueryToElastic(unittest.TestCase):
     def test_prefix(self):
         query = MatchGlob("a", "thingy*")
         result = self.converter._convert(query)
-        self.assertSame(result, {
+        self.assertEquals(result, {
             "prefix" : {
                 "a" : "thingy" 
             }
@@ -89,21 +86,21 @@ class TestAdvancedQueryToElastic(unittest.TestCase):
     def test_glob(self):
         query = MatchGlob("a", "*thingy*")
         result = self.converter._convert(query)
-        self.assertSame(result, {
+        self.assertEquals(result, {
             "wildcard" : {
                 "a" : "*thingy*" 
             }
         })
         query = MatchGlob("a", "thi?ngy")
         result = self.converter._convert(query)
-        self.assertSame(result, {
+        self.assertEquals(result, {
             "wildcard" : {
                 "a" : "thi?ngy" 
             }
         })
         query = MatchGlob("a", "thi*ngy")
         result = self.converter._convert(query)
-        self.assertSame(result, {
+        self.assertEquals(result, {
             "wildcard" : {
                 "a" : "thi*ngy" 
             }
@@ -112,7 +109,7 @@ class TestAdvancedQueryToElastic(unittest.TestCase):
     def test_path(self):
         query = Generic("path", {"query":('/a/b/c',)})
         result = self.converter._convert(query)
-        self.assertSame(result, {
+        self.assertEquals(result, {
             "in" : {
                 "path" : ("/a/b/c",)
             }
@@ -121,7 +118,7 @@ class TestAdvancedQueryToElastic(unittest.TestCase):
     def test_and(self):
         query = And(Eq("a", "b"), Eq("b", "c"))
         result = self.converter._convert(query)
-        self.assertSame(result, {
+        self.assertEquals(result, {
             "and": [
                 {"term": {"a":"b"}},
                 {"term": {"b":"c"}}
@@ -132,18 +129,29 @@ class TestAdvancedQueryToElastic(unittest.TestCase):
     def test_or(self):
         query = Or(Eq("a", "b"), Eq("b", "c"))
         result = self.converter._convert(query)
-        self.assertSame(result, {
+        self.assertEquals(result, {
             "or": [
                 {"term": {"a":"b"}},
                 {"term": {"b":"c"}}
             ]
         })
 
+    def test_not(self):
+        query = ~Eq("a", "b")
+        result = self.converter._convert(query)
+        self.assertEquals(result, {
+            "not": {
+                "filter": {
+                    "term": {"a":"b"}
+                }
+            }
+        })
+
     def test_nesting(self):
         query = Or(And(Eq("a", "b"), Eq("b", "c")), 
                 Or(MatchGlob("c", "thing*"), In("a", [1, 2, 3])))
         result = self.converter._convert(query)
-        self.assertSame(result, {
+        self.assertEquals(result, {
             "or": [
                 {"and": [
                     {"term":{"a":"b"}},
