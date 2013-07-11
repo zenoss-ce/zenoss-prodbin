@@ -7,8 +7,9 @@ class AdvancedQueryToElastic(object):
 
     def _isRegexish(self, term):
         """
-        We generally use glob matching for performance and a better user experience
-        but if the query has regex characters in it then make it a regex object
+        We generally use glob matching for performance and a better user
+        experience but if the query has regex characters in it then make it
+        a regex object
         """
         value = term.replace("(?i)", "")
         return  "["  in value or "(" in value or "|" in value

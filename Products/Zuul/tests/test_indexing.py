@@ -6,24 +6,13 @@ from Products.AdvancedQuery import Ge, Le, MatchGlob, Generic
 from Products.Zuul.catalog.index_service import AdvancedQueryToElastic
 
 
-def samedict(a, b):
-    for k, v in a.iteritems():
-        if k not in b or v != b[k]:
-            return False
-        elif isinstance(v, dict):
-            if not samedict(v, b[k]):
-                return False
-    return True
-
-
 class TestAdvancedQueryToElastic(unittest.TestCase):
 
     def setUp(self):
         self.converter = AdvancedQueryToElastic()
 
     def assertSame(self, a, b):
-        if not samedict(a, b):
-            self.fail("%s != %s" % (a, b))
+        self.assertEqual(a, b)
 
     def test_eq(self):
         query = Eq("a", "b")
