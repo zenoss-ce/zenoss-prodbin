@@ -22,3 +22,12 @@ bin/zencatalogservice
 bin/zenperfpub
 bin/zenwebserver
 bin/zpasswd
+.idea/
+Core.iml
+bin/powerline
+bin/powerline-lint
+bin/virtualenv-clone
+bin/virtualenvwrapper.sh
+bin/virtualenvwrapper_lazy.sh
+*.pyc
+*~

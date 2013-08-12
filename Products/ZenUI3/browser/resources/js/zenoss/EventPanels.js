@@ -1173,6 +1173,7 @@
                 try {
                     state = Ext.decode(Zenoss.util.base64.decode(decodeURIComponent(state)));
                     this.applyState(state);
+                    this.filterRow.storeSearch();
                 } catch(e) { }
             }
         },
@@ -1371,7 +1372,7 @@
             };
             config = Ext.applyIf(config || {}, {
                 height: 45,
-                directFn: Zenoss.remote.DeviceRouter.getInfo,
+                directFn: Zenoss.util.isolatedRequest(Zenoss.remote.DeviceRouter.getInfo),
                 text: Zenoss.render.events(severityCounts, config.count || 3)
             });
             Zenoss.EventRainbow.superclass.constructor.call(this, config);

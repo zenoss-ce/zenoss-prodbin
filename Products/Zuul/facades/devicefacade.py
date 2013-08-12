@@ -19,7 +19,7 @@ from Products.AdvancedQuery import Eq, Or, Generic, And
 from Products.Zuul.decorators import info
 from Products.Zuul.utils import unbrain
 from Products.Zuul.facades import TreeFacade
-from Products.Zuul.interfaces import IDeviceFacade, ICatalogTool, IInfo, ITemplateNode
+from Products.Zuul.interfaces import IDeviceFacade, ICatalogTool, IInfo, ITemplateNode, IMetricServiceGraphDefinition
 from Products.Jobber.facade import FacadeMethodJob
 from Products.Zuul.tree import SearchResults
 from Products.DataCollector.Plugins import CoreImporter, PackImporter, loadPlugins
@@ -209,11 +209,14 @@ class DeviceFacade(TreeFacade):
         # Do one big lookup of component events and merge back in to type later
         if not uuidMap:
             return []
+        
         zep = getFacade('zep')
-        severities = zep.getWorstSeverity(uuidMap.keys())
-        for uuid, sev in severities.iteritems():
-            compType = componentTypes[uuidMap[uuid]]
-            compType['severity'] = max(compType['severity'], sev)
+        showSeverityIcon = self.context.dmd.UserInterfaceSettings.getInterfaceSettings().get('showEventSeverityIcons')
+        if showSeverityIcon:
+            severities = zep.getWorstSeverity(uuidMap.keys())
+            for uuid, sev in severities.iteritems():
+                compType = componentTypes[uuidMap[uuid]]
+                compType['severity'] = max(compType['severity'], sev)
 
         result = []
         for name, compType in componentTypes.iteritems():
@@ -652,7 +655,13 @@ class DeviceFacade(TreeFacade):
 
     def getGraphDefs(self, uid, drange):
         obj = self._getObject(uid)
-        return obj.getDefaultGraphDefs(drange)
+        graphs = []
+        for template in obj.getRRDTemplates():
+            for graph in template.getGraphDefs():
+                info = IMetricServiceGraphDefinition(graph)
+                info.setContext(obj)
+                graphs.append(info)
+        return graphs
 
     def addIpRouteEntry(self, uid, dest, routemask, nexthopid, interface,
                         routeproto, routetype, userCreated):

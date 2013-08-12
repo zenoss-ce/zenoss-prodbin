@@ -34,6 +34,7 @@ from Products.Zuul.utils import ZuulMessageFactory as _t
 from Products.ZenUI3.browser.eventconsole.grid import column_config
 from Products.Zuul.interfaces import ICatalogTool
 from Products.Zuul.infos.event import EventCompatInfo, EventCompatDetailInfo
+from zenoss.protocols.services import ServiceResponseError
 
 
 log = logging.getLogger('zen.%s' % __name__)
@@ -237,9 +238,14 @@ class EventsRouter(DirectRouter):
         @type  params: dictionary
         @param params: (optional) Key-value pair of filters for this search.
                        (default: None)
-        @type  uid: string
-        @param uid: (optional) Context for the query (default: None)
+        @type  uids: iterable(string)
+        @param uids: (optional) Contexts for the query (default: None)
         """
+        if not uids:
+            uids=[]
+        elif isinstance(uids, basestring):
+            uids = [uids]
+
         if params:
             log.debug('logging params for building filter: %s', params)
             if isinstance(params, basestring):
@@ -859,3 +865,17 @@ class EventsRouter(DirectRouter):
         audit('UI.Event.ClearHeartbeat', self.context, monitor=monitor,
               daemon=daemon)
         return DirectResponse.succeed()
+
+    @require('Manage Events')
+    def updateDetails(self, evid, **detailInfo):
+        """
+        On success, returns the status.
+        """
+        try:
+            resp = self.zep.updateDetails(evid, **detailInfo)
+        except ServiceResponseError as ex:
+            return DirectResponse.fail(msg=str(ex))
+        audit('UI.Event.UpdateEventDetails', self.context, evid=evid,
+              details=detailInfo)
+        return DirectResponse.succeed(status=resp['status'])
+
