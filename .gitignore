@@ -23,7 +23,7 @@ bin/zenperfpub
 bin/zenwebserver
 bin/zpasswd
 .idea/
-Core.iml
+*.iml
 bin/powerline
 bin/powerline-lint
 bin/virtualenv-clone

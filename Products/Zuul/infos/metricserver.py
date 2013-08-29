@@ -9,9 +9,11 @@
 
 from zope.interface import implements
 from Products.Zuul.infos import ProxyProperty, HasUuidInfoMixin
-from Products.Zuul.interfaces import template as templateInterfaces
+from Products.Zuul.interfaces import template as templateInterfaces, IInfo
 from Products.ZenModel.DataPointGraphPoint import DataPointGraphPoint
 from Products.ZenModel.ThresholdGraphPoint import ThresholdGraphPoint
+from Products.Zuul.facades.metricfacade import AGGREGATION_MAPPING
+from Products.ZenModel.ConfigurationError import ConfigurationError
 
 __doc__ = """
 These adapters are responsible for serializing the graph
@@ -53,7 +55,7 @@ class MetricServiceGraphDefinition(MetricServiceGraph):
     @property
     def tags(self):
         # TODO: possibly create a new adapter so zenpacks can register their own metric service tags
-        return { 'uuid': self._context.getUUID() }
+        return { 'uuid': [self._context.getUUID()] }
 
     def _getGraphPoints(self, klass):
         graphDefs = self._object.getGraphPoints(True)
@@ -88,14 +90,6 @@ class MetricServiceThreshold(ColorMetricServiceGraphPoint):
 
 class MetricServiceGraphPoint(ColorMetricServiceGraphPoint):
 
-    _aggregationMapping = {
-        'average': 'avg',
-        'minimum': 'min',
-        'maximum': 'max',
-        'total': 'sum',
-        #TODO: get last agg function working
-        'last': None
-    }
     @property
     def id(self):
         return self._object.id
@@ -108,13 +102,31 @@ class MetricServiceGraphPoint(ColorMetricServiceGraphPoint):
     def type(self):
         return self._object.lineType.lower()
 
+    def _getDataPoint(self):
+        try:
+            return IInfo(self._object.graphDef().rrdTemplate().getRRDDataPoint(self._object.dpName))
+        except ConfigurationError:
+            return None
+
+    @property
+    def rate(self):
+        datapoint = self._getDataPoint()
+        if datapoint:
+            return datapoint.rate
+
+    @property
+    def rateOptions(self):
+        datapoint = self._getDataPoint()
+        if datapoint:
+            return datapoint.getRateOptions()
+
     @property
     def aggregator(self):
         agg = self._object.cFunc.lower()
-        return self._aggregationMapping.get(agg, agg)
+        return AGGREGATION_MAPPING.get(agg, agg)
 
     @property
     def tags(self):
-        return {'datasource': self._object.dpName.split("_")[0]}
+        return {'datasource': [self._object.dpName.split("_")[0]]}
     format = ProxyProperty('format')
     rpn = ProxyProperty('rpn')
