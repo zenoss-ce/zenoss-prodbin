@@ -38,7 +38,9 @@ from Products.ZenModel.Software import Software
 from Products.ZenModel.OperatingSystem import OperatingSystem
 from Products.Zuul.utils import getZProperties, allowedRolesAndUsers
 
-from interfaces import IGloballyIndexed, IPathReporter, IIndexableWrapper
+from .interfaces import IGloballyIndexed, IPathReporter, IIndexableWrapper
+from .Catalog import Catalog
+from .index_service import WebSocketCatalogService
 
 _MARKER = object()
 _CACHE = defaultdict(dict)
@@ -382,6 +384,10 @@ class GlobalCatalog(ZCatalog):
 
     def __init__(self):
         ZCatalog.__init__(self, self.id)
+        self._catalog = Catalog()
+
+    def _evalAdvancedQuery(self, *args, **kwargs):
+        return self._catalog.search(*args, **kwargs)
 
     def searchResults(self, **kw):
         user = getSecurityManager().getUser()
@@ -482,9 +488,14 @@ def initializeGlobalCatalog(catalog):
 class GlobalCatalogFactory(object):
     implements(IGlobalCatalogFactory)
 
+    def __init__(self):
+        self._svc = WebSocketCatalogService(globalCatalogId)
+
     def create(self, portal):
         catalog = GlobalCatalog()
         self.setupCatalog(portal, catalog)
+        # TODO: Hook this up
+        # self._svc.createCatalog()
 
     def setupCatalog(self, portal, catalog):
         initializeGlobalCatalog(catalog)
@@ -492,3 +503,4 @@ class GlobalCatalogFactory(object):
 
     def remove(self, portal):
         portal._delObject(globalCatalogId)
+
