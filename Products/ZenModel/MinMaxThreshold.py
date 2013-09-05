@@ -8,7 +8,7 @@
 ##############################################################################
 
 
-from Products.ZenModel.ThresholdInstance import RRDThresholdInstance
+from Products.ZenModel.ThresholdInstance import MetricThresholdInstance
 
 __doc__= """MinMaxThreshold
 Make threshold comparisons dynamic by using TALES expresssions,
@@ -163,7 +163,7 @@ InitializeClass(MinMaxThreshold)
 MinMaxThresholdClass = MinMaxThreshold
 
 
-class MinMaxThresholdInstance(RRDThresholdInstance):
+class MinMaxThresholdInstance(MetricThresholdInstance):
     # Not strictly necessary, but helps when restoring instances from
     # pickle files that were not constructed with a count member.
     count = {}
@@ -171,10 +171,10 @@ class MinMaxThresholdInstance(RRDThresholdInstance):
     def __init__(self, id, context, dpNames,
                  minval, maxval, eventClass, severity, escalateCount,
                  eventFields={}):
-        RRDThresholdInstance.__init__(self, id, context, dpNames, eventClass, severity)
+        MetricThresholdInstance.__init__(self, id, context, dpNames, eventClass, severity)
         self.count = {}
-        self.minimum = minval
-        self.maximum = maxval
+        self.minimum = minval if minval != '' else None
+        self.maximum = maxval if maxval != '' else None
         self.escalateCount = escalateCount
         self.eventFields = eventFields
 
@@ -196,7 +196,7 @@ class MinMaxThresholdInstance(RRDThresholdInstance):
 
     def resetCount(self, dp):
         self.count[self.countKey(dp)] = 0
-    
+
     def checkRange(self, dp, value):
         'Check the value for min/max thresholds'
         log.debug("Checking %s %s against min %s and max %s",
@@ -205,28 +205,27 @@ class MinMaxThresholdInstance(RRDThresholdInstance):
             return []
         if isinstance(value, basestring):
             value = float(value)
-        thresh = None
 
-        # Handle all cases where both minimum and maximum are set.
-        if self.maximum is not None and self.minimum is not None:
-            if self.maximum >= self.minimum:
-                if value > self.maximum:
-                    thresh = self.maximum
-                    how = 'exceeded'
-                elif value < self.minimum:
-                    thresh = self.minimum
-                    how = 'not met'
-            elif self.maximum < value < self.minimum:
+        # Check the boundaries
+        minbounds = self.minimum is None or value >= self.minimum
+        maxbounds = self.maximum is None or value <= self.maximum
+        outbounds = None not in (self.minimum, self.maximum) and \
+                    self.minimum > self.maximum
+
+        thresh = None
+        how = None
+
+        if outbounds:
+            if not maxbounds and not minbounds:
                 thresh = self.maximum
                 how = 'violated'
-
-        # Handle simple cases where only minimum or maximum is set.
-        elif self.maximum is not None and value > self.maximum:
-            thresh = self.maximum
-            how = 'exceeded'
-        elif self.minimum is not None and value < self.minimum:
-            thresh = self.minimum
-            how = 'not met'
+        else:
+            if not maxbounds:
+                thresh = self.maximum
+                how = 'exceeded'
+            elif not minbounds:
+                thresh = self.minimum
+                how = 'not met'
 
         if thresh is not None:
             severity = self.severity
