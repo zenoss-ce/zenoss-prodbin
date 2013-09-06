@@ -3,6 +3,10 @@
     xmlns:five="http://namespaces.zope.org/five"
     xmlns:browser="http://namespaces.zope.org/browser">
 
+    <subscriber
+        for="Products.ZenUtils.events.IZopeApplicationOpenedEvent"
+        handler=".CatalogTransaction.registerSynchronizer" />
+
     <adapter factory = ".global_catalog.IndexableWrapper"/>
     <adapter factory = ".global_catalog.ComponentWrapper"/>
     <adapter factory = ".global_catalog.DeviceWrapper"/>

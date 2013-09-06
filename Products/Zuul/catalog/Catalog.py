@@ -13,11 +13,8 @@ import time
 from Products.ZCatalog.Catalog import Catalog as ZopeCatalog, CatalogSearchArgumentsMap
 from Products.ZCatalog.Lazy import LazyCat, LazyMap
 from Products.PluginIndexes.common import safe_callable
-from .index_service import WebSocketCatalogService, CatalogServiceException
+from .index_service import WebSocketCatalogService, CatalogServiceException, IndexRequest, ObjectData, AdvancedQueryToElastic
 from Products.ZenUtils.websocket import WebSocketConnectionClosedException
-#from .AdvancedQueryProtobufAdapter import AdvancedQueryProtobufAdapter, CatalogSearchArgumentsMapToProtobufAdapter
-from ZenPacks.zenoss.CatalogService.protocols.catalogservice_pb2 import BatchRequest
-#from .protocols import catalogservice_pb2 as enums
 from Products.Zuul.catalog.global_catalog import globalCatalogId
 import logging
 
@@ -61,37 +58,39 @@ class Catalog(ZopeCatalog):
             datum = _marker
         return datum
 
-    def _addIndexedAttributes(self, catalogObject, attrs):
+    def _addIndexedAttributes(self, request, attrs):
         """
         Accepts a key value set of values to be indexed
         on this protobuf and adds them.
 
-        @type  catalogObject: Protobuf
-        @param catalogObject: protobuf of the items we are cataloging
+        @type  request: IndexRequest
+        @param request: IndexRequest of the items we are cataloging
         @type  attrs: dict
         @param attrs: Key/value pair of values to add to this protobuf
         """
+        data = request.new_datum()
         # get the rest of the index values
         for name, value in attrs.iteritems():
             values = []
             if value is None:
-                values.append("")
+                continue
             # indexed values are always multiple (for keyword indexes)
             elif hasattr(value, "__iter__"):
                 values.extend(filter(lambda v: v is not None, value))
             else:
                 values.append(value)
             if values:
-                idxValue = catalogObject.indexedvalues.add(name=name)
+                idxValue = data.properties[name] = []
                 for value in values:
                     try:
-                        idxValue.values.append(value)
+                        idxValue.append(value)
                     except (TypeError, ValueError):
                         try:
-                            idxValue.values.append(unicode(value))
+                            idxValue.append(unicode(value))
                         except UnicodeDecodeError:
-                            log.error("Failed to append protobuf attr key:%s value:%s catalogObject:%s", name, value, catalogObject)
+                            log.error("Failed to append protobuf attr key:%s value:%s catalogObject:%s", name, value, request)
                             raise
+        return data
 
     def clear(self):
         if self.initialized:
@@ -106,14 +105,14 @@ class Catalog(ZopeCatalog):
         super(Catalog, self).clear()
          
 
-    def fillCatalogRequest(self, catalogObject, uid, attrs):
+    def fillIndexRequest(self, request, uid, attrs):
         """
-        Populates the BatchRequest for cataloging an object. Nothing
-        is returned but the passed in protobuf is populated
+        Populates the IndexRequest or cataloging an object. Nothing
+        is returned but the passed in request is populated
         with the indexed values.
 
-        @type  catalogObject: Protobuf
-        @param catalogObject: protobuf of the item we are cataloging
+        @type  request: IndexRequest
+        @param request: request of the item we are cataloging
         @type  uid: string
         @param uid: Unique path of the object
         @type  attrs: dict
@@ -132,36 +131,38 @@ class Catalog(ZopeCatalog):
                 paths.add(full_path)
         attrs['path'] = paths
 
-        self._addIndexedAttributes(catalogObject, attrs)
+        return self._addIndexedAttributes(request, attrs)
 
-    def catalogObject(self, object, uid, threshold=None, idxs=None,
+    def catalogObject(self, object_, uid, threshold=None, idxs=None,
                       update_metadata=1):
         index = self.uids.get(uid, None)
 
         if index is None:  # we are inserting new data
-            index = self.updateMetadata(object, uid, None)
+            index = self.updateMetadata(object_, uid, None)
             self._length.change(1)
             self.uids[uid] = index
             self.paths[index] = uid
 
         elif update_metadata:  # we are updating and we need to update metadata
-            self.updateMetadata(object, uid, index)
+            self.updateMetadata(object_, uid, index)
 
-        # Always update all indexes - Lucene doesn't update individual fields
-        use_indexes = self.indexes.keys()
+        use_indexes = idxs or self.indexes.keys()
 
         attrs = {}
         for name in use_indexes:
         # End copied from ZCatalog.Catalog
         # Begin custom code replacing Catalog indexing
-            attrs[name] = self._get_object_datum(object, name)
+            attrs[name] = self._get_object_datum(object_, name)
 
         svc = self._get_service()
 
         # create the batch request protobuf
-        request = BatchRequest()
-        catalog = request.catalog.add(rid=index)
-        self.fillCatalogRequest(catalog, uid, attrs)
+        request = IndexRequest()
+        request.operation = request.ADD
+        datum = self.fillIndexRequest(request, uid, attrs)
+        datum.id_ = object_.uuid() or object_.uid()
+        datum.version = object_._p_mtime or 0
+        datum.properties['rid'] = index
 
         # Send the request
         svc.index_object(request)
@@ -171,20 +172,17 @@ class Catalog(ZopeCatalog):
 
         # create a request protobuf
         if uid in self.uids:
-            request = BatchRequest()
-            request.uncatalog.append(self.uids[uid])
-
+            request = IndexRequest()
+            request.operation = request.REMOVE
+            datum = request.new_datum()
+            datum.id_ = self.uids[uid]
             svc.unindex_object(request)
 
         ZopeCatalog.uncatalogObject(self, uid)
 
     def make_query(self, query):
-        if isinstance(query, CatalogSearchArgumentsMap):
-            adapter = CatalogSearchArgumentsMapToProtobufAdapter()
-            return adapter.makeProtobuf(query)
-        else:
-            adapter = AdvancedQueryProtobufAdapter()
-            return adapter.advancedQueryToProtobuf(query)
+        adapter = AdvancedQueryToElastic()
+        return adapter.convert(query)
 
     def search(self, query, sort_index=None, reverse=0, limit=None, merge=1, start=0):
         """
@@ -210,22 +208,22 @@ class Catalog(ZopeCatalog):
             total = len(rs)
         else:
             query = self.make_query(query)
-            if limit is not None:
-                query.limit = limit
-            if start:
-                query.start = start
-            if sort_index:
-                if not hasattr(sort_index, '__iter__'):
-                    sort_index = (sort_index,)
-                for sort in sort_index:
-                    if isinstance(sort, (tuple, list)):
-                        name, direction = sort
-                        direction = enums.DESCENDING if direction.lower() == 'desc' else enums.ASCENDING
-                        query.sort.add(name=name, direction=direction)
-                    elif isinstance(sort, basestring):
-                        query.sort.add(name=sort)
-                    elif hasattr(sort, 'id'):
-                        query.sort.add(name=sort.id)
+            #if limit is not None:
+            #    query.limit = limit
+            #if start:
+            #    query.start = start
+            #if sort_index:
+            #    if not hasattr(sort_index, '__iter__'):
+            #        sort_index = (sort_index,)
+            #    for sort in sort_index:
+            #        if isinstance(sort, (tuple, list)):
+            #            name, direction = sort
+            #            direction = enums.DESCENDING if direction.lower() == 'desc' else enums.ASCENDING
+            #            query.sort.add(name=name, direction=direction)
+            #        elif isinstance(sort, basestring):
+            #            query.sort.add(name=sort)
+            #        elif hasattr(sort, 'id'):
+            #            query.sort.add(name=sort.id)
 
             # query
             log.debug(str(query))

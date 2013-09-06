@@ -39,7 +39,6 @@ from Products.ZenModel.OperatingSystem import OperatingSystem
 from Products.Zuul.utils import getZProperties, allowedRolesAndUsers
 
 from .interfaces import IGloballyIndexed, IPathReporter, IIndexableWrapper
-from .Catalog import Catalog
 from .index_service import WebSocketCatalogService
 
 _MARKER = object()
@@ -384,9 +383,10 @@ class GlobalCatalog(ZCatalog):
 
     def __init__(self):
         ZCatalog.__init__(self, self.id)
+        from .Catalog import Catalog
         self._catalog = Catalog()
 
-    def _evalAdvancedQuery(self, *args, **kwargs):
+    def evalAdvancedQuery(self, *args, **kwargs):
         return self._catalog.search(*args, **kwargs)
 
     def searchResults(self, **kw):

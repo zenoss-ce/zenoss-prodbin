@@ -2,6 +2,7 @@ import re
 import time
 import socket
 import logging
+import json
 from random import randint
 from urlparse import urlparse
 from functools import wraps
@@ -21,7 +22,7 @@ log = logging.getLogger('zen.index-service')
 CATALOGTXATTR = '_catalog_transaction'
 PROP_ZENCATALOGSERVICE_URI = 'zencatalogservice-uri'
 POSSIBLE_DISCONNECTION_TIMEOUT = 290 # seconds
-DEFAULT_ZENCATALOGSERVICE_URI = 'http://127.0.0.1:8085'
+DEFAULT_ZENCATALOGSERVICE_URI = 'http://127.0.0.1:8553'
 
 
 class CatalogServiceException(Exception):
@@ -33,6 +34,87 @@ class CatalogServiceException(Exception):
         super(CatalogServiceException, self).__init__(msg)
         self.http_response_code = http_response_code
         self.http_response_msg = http_response_msg
+
+
+class IndexAPIRequest(object):
+
+    NOOP = "NOOP"
+    TX_VOTE = "TX_VOTE"
+    TX_ABORT = "TX_ABORT"
+    TX_COMMIT = "TX_COMMIT"
+    TX_FINISH = "TX_FINISH"
+    SP_CREATE = "SP_CREATE"
+    SP_DELETE = "SP_DELETE"
+    SP_ROLLBACK = "SP_ROLLBACK"
+
+    indexRequests = None
+    txid = None
+    query = None
+    operation = None
+
+    def __init__(self):
+        self.indexRequests = []
+        self.txid = "abc"
+        self.query = None
+        self.operation = self.NOOP
+
+    def to_dict(self):
+        d = {
+            'txid': self.txid,
+            'operation': self.operation
+        }
+        if self.indexRequests:
+            d['indexRequests'] = [r.to_dict() for r in self.indexRequests]
+        if self.query:
+            d['query'] = self.query
+        return d
+
+
+class IndexRequest(object):
+
+    ADD = "ADD"
+    REMOVE = "REMOVE"
+
+    operation = None
+    states = None
+
+    def __init__(self):
+        self.states = []
+        self.operation = None
+
+    def new_datum(self):
+        datum = ObjectData()
+        self.states.append(datum)
+        return datum
+
+    def to_dict(self):
+        return {
+            'states': [s.to_dict() for s in self.states],
+            'operation': self.operation
+        }
+
+
+class ObjectData(object):
+
+    id_ = None
+    version = None
+    properties = None
+
+    def __init__(self):
+        self.id_ = None
+        self.version = None
+        self.properties = {}
+
+    def to_dict(self):
+        return {
+            'id': self.id_,
+            'version': self.version,
+            'properties': self.properties
+        }
+
+
+class IndexAPIResponse(object):
+    pass
 
 
 def handleWebSocketException(f):
@@ -132,8 +214,8 @@ class WebSocketCatalogService(object):
         http_uri = config.get(PROP_ZENCATALOGSERVICE_URI,
                               DEFAULT_ZENCATALOGSERVICE_URI)
         # TODO: Reference the proxy
-        self.uri = 'ws://{netloc}{path}/zencatalogservice/ws?catalog={catalog_id}'.format(
-            catalog_id=catalog_id, **urlparse(http_uri)._asdict())
+        self.uri = 'ws://{netloc}{path}/ws/index/global_catalog'.format(
+            **urlparse(http_uri)._asdict())
 
     def connect(self):
         return create_connection(self.uri)
@@ -173,7 +255,7 @@ class WebSocketCatalogService(object):
         mgr = getattr(tx, CATALOGTXATTR, None)
         if mgr is None:
             # Circular import
-            from ZenPacks.zenoss.CatalogService.CatalogTransaction import WebSocketTransactionManager
+            from .CatalogTransaction import WebSocketTransactionManager
             mgr = WebSocketTransactionManager(tx, self)
             setattr(tx, CATALOGTXATTR, mgr)
             tx.join(mgr)
@@ -187,44 +269,42 @@ class WebSocketCatalogService(object):
         # the current transaction.
         while txid != received_txid:
             result = self.socket.recv_all()
-            response = CatalogWebSocketResponse()
-            response.ParseFromString(result)
-            received_txid = response.txid
+            response = json.loads(result)
+            received_txid = response.get('txid')
         return response
 
-    def _send(self, msg=None, op=NOOP, savepoint=None):
-        newmsg = CatalogWebSocketMessage()
+    def _send(self, query=None, indexreq=None, op=IndexAPIRequest.NOOP, savepoint=None):
+        newmsg = IndexAPIRequest()
         txid = getattr(transaction.get(), '_transaction_id', '')
+        newmsg.operation = op
         newmsg.txid = txid
-        if msg is not None:
-            if isinstance(msg, BatchRequest):
-                newmsg.batchrequests.extend([msg])
-            elif isinstance(msg, Query):
-                newmsg.queries.extend([msg])
-        newmsg.txoperation = op
+        if query is not None:
+            newmsg.query = json.dumps(query)  # Expecting a JSON string, so double-serialize
+        if indexreq is not None:
+            newmsg.indexRequests.append(indexreq)
         if savepoint:
-            newmsg.savepointid = savepoint
+            pass
+            ## Savepoints aren't supported yet
+            # newmsg[savepointid = savepoint
         try:
             sock = self.socket
             if self._getCurrentCatalogTransaction().modified_objects == 0:
                 sock = self.reconnect_socket()
-            sock.send(newmsg.SerializeToString(), ABNF.OPCODE_BINARY)
+            msgdict = newmsg.to_dict()
+            log.debug("Sending message: %s", msgdict)
+            sock.send(json.dumps(msgdict))
             response = self._get_response(txid)
         except socket.error:
             raise WebSocketConnectionClosedException()
         else:
-            if response.exception:
-                exc = response.exception[0]
-                raise CatalogServiceException(
-                    exc.message,
-                    exc.response_code
-                )
+            if response.get('exception'):
+                raise CatalogServiceException(response['exception'])
             return response
 
     def abort(self):
         try:
             log.debug("Aborting current transaction via WebSocket")
-            self._send(op=TX_ABORT)
+            self._send(op=IndexAPIRequest.TX_ABORT)
             self._clearsocket()
         except WebSocketException:
             # Just let the transaction abort. The other side will
@@ -234,48 +314,56 @@ class WebSocketCatalogService(object):
     @handleWebSocketException
     def commit(self):
         log.debug("Committing current transaction via WebSocket")
-        self._send(op=TX_COMMIT)
+        self._send(op=IndexAPIRequest.TX_COMMIT)
 
     @handleWebSocketException
     def vote(self):
         log.debug("Voting on current transaction via WebSocket")
-        self._send(op=TX_VOTE)
+        self._send(op=IndexAPIRequest.TX_VOTE)
         self._clearsocket()
 
     @handleWebSocketException
     def createSavepoint(self, savepoint_id):
         log.debug("Creating savepoint via WebSocket")
-        self._send(op=SP_CREATE, savepoint=savepoint_id)
+        self._send(op=IndexAPIRequest.SP_CREATE, savepoint=savepoint_id)
 
     @handleWebSocketException
     def deleteSavepoint(self, savepoint_id):
         log.debug("Deleting savepoint via WebSocket")
-        self._send(op=SP_DELETE, savepoint=savepoint_id)
+        self._send(op=IndexAPIRequest.SP_DELETE, savepoint=savepoint_id)
 
     @handleWebSocketException
     def rollbackSavepoint(self, savepoint_id):
         log.debug("Rolling back to savepoint via WebSocket")
-        self._send(op=SP_ROLLBACK, savepoint=savepoint_id)
+        self._send(op=IndexAPIRequest.SP_ROLLBACK, savepoint=savepoint_id)
+
+    @handleWebSocketException
+    def index_object(self, request):
+        self._execute_batch_request(request)
+
+    @handleWebSocketException
+    def unindex_object(self, request):
+        self._execute_batch_request(request)
 
     @handleWebSocketException
     def search(self, query):
         log.debug("Searching via WebSocket")
-        response = self._send(query)
-        if len(response.results):
-            pb = response.results[0]
-            return tuple(pb.rid), pb.total
+        response = self._send(query=query)
+        if len(response.get('results', ())):
+            return tuple(response['results']), len(response['results'])
         return (), 0
 
     @handleWebSocketException
     def _execute_batch_request(self, request):
         log.debug("Executing catalog request via WebSocket")
         txmgr = self._getCurrentCatalogTransaction()
-        self._send(request)
+        # TODO: version and stuff
+        self._send(indexreq=request)
 
         # We keep track of the number of modified objects in a transaction
         # in order to determine whether it's safe to just reset the websocket
         # connection if it goes down.
-        modified_objects = len(request.uncatalog) + len(request.catalog)
+        modified_objects = len(request.states)
         if modified_objects:
             txmgr.modified_objects += modified_objects
 
@@ -384,9 +472,9 @@ class AdvancedQueryToElastic(object):
 
     def convert(self, query):
         return {
-            "query": {
+            #"query": {
                 "constant_score": {
                     "filter": self._convert(query)
                 }
-            }
+            #}
         }
