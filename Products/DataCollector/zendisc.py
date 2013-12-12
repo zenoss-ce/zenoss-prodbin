@@ -25,14 +25,15 @@ except ImportError:
 from ipaddr import IPAddress
 
 # Zenoss custom ICMP library
-from icmpecho.Ping import Ping4, Ping6
+# from icmpecho.Ping import Ping4, Ping6
 
 import Globals
 from optparse import SUPPRESS_HELP
+from collections import namedtuple
 
 from Products.DataCollector.zenmodeler import ZenModeler
 from Products.ZenUtils.Exceptions import ZentinelException
-from Products.ZenUtils.Utils import unused
+from Products.ZenUtils.Utils import unused, binPath
 from Products.ZenUtils.Driver import drive
 from Products.ZenUtils.IpUtil import asyncNameLookup, isip, parse_iprange, \
                                      getHostByName, ipunwrap
@@ -43,6 +44,7 @@ from Products.ZenModel.Exceptions import NoIPAddress
 from Products.ZenEvents.ZenEventClasses import Status_Snmp
 from Products.ZenEvents.Event import Info
 from Products.ZenStatus.PingService import PingService
+from Products.ZenStatus.nmap import executeNmapForIps
 from Products.ZenHub.PBDaemon import FakeRemote, PBDaemon
 from Products.ZenHub.services  import DiscoverService, ModelerService
 from Products.ZenHub.services.DiscoverService import JobPropertiesProxy
@@ -50,9 +52,9 @@ unused(DiscoverService, ModelerService, JobPropertiesProxy) # for pb
 
 
 
-from twisted.internet.defer import succeed
+from twisted.internet.defer import succeed, inlineCallbacks
 from twisted.python.failure import Failure
-from twisted.internet import reactor
+from twisted.internet import reactor, defer
 from twisted.names.error import DNSNameError
 
 
@@ -75,42 +77,22 @@ class ZenDisc(ZenModeler):
         ZenModeler.__init__(self, single )
         self.discovered = []
 
-        # pyraw inserts IPV4_SOCKET and IPV6_SOCKET globals
-        if IPV4_SOCKET is None:
-            self._pinger4 = None
-        else:
-            protocol = Ping4(IPV4_SOCKET)
-            self._pinger4 = PingService(protocol,
-                                        timeout=self.options.timeout,
-                                        defaultTries=self.options.tries)
 
-        if IPV6_SOCKET is None:
-            self._pinger6 = None
-        else:
-            protocol = Ping6(IPV6_SOCKET)
-            self._pinger6 = PingService(protocol,
-                                        timeout=self.options.timeout,
-                                        defaultTries=self.options.tries)
-
-    def ping(self, ip):
+    @inlineCallbacks
+    def nmapPing(self, ipList):
         """
-        Given an IP address, return a deferred that pings the address.
         """
-        self.log.debug("Using ipaddr module to convert %s" % ip)
-        ipObj = IPAddress(ip)
-
-        if ipObj.version == 6:
-            if self._pinger6 is None:
-                retval = Failure()
+        results = yield executeNmapForIps(sorted(ipList), binPath("nmap"))
+        Result = namedtuple("PingResult", ['ipaddr'])
+        returnVal =[]
+        for pingResult in results.itervalues():
+            result = Result(pingResult.address)
+            if pingResult.isUp:
+                returnVal.append(result)
             else:
-                retval = self._pinger6.ping(ip)
-        else:
-            if self._pinger4 is None:
-                retval = Failure()
-            else:
-                retval = self._pinger4.ping(ip)
+                returnVal.append(Failure(result))
+        defer.returnValue(returnVal)
 
-        return retval
 
     def config(self):
         """
@@ -152,10 +134,7 @@ class ZenDisc(ZenModeler):
                         % net.getNetworkName())
                     continue
                 self.log.info("Discover network '%s'", net.getNetworkName())
-                yield NJobs(self.options.chunkSize,
-                            self.ping,
-                            net.fullIpList()).start()
-                results = driver.next()
+                results = yield self.nmapPing(net.fullIpList())
                 goodips = [
                     v.ipaddr for v in results if not isinstance(v, Failure)]
                 badips = [
@@ -199,10 +178,7 @@ class ZenDisc(ZenModeler):
         for iprange in self.options.range:
             # Parse to find ips included
             ips.extend(parse_iprange(iprange))
-        yield NJobs(self.options.chunkSize,
-                    self.ping,
-                    ips).start()
-        results = driver.next()
+        results = yield self.nmapPing(ips)
         goodips = [v.ipaddr for v in results if not isinstance(v, Failure)]
         badips = [v.value.ipaddr for v in results if isinstance(v, Failure)]
         goodCount += len(goodips)
