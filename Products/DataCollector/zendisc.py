@@ -43,8 +43,7 @@ from Products.ZenUtils.snmp import SnmpAgentDiscoverer
 from Products.ZenModel.Exceptions import NoIPAddress
 from Products.ZenEvents.ZenEventClasses import Status_Snmp
 from Products.ZenEvents.Event import Info
-from Products.ZenStatus.PingService import PingService
-from Products.ZenStatus.nmap import executeNmapForIps
+from Products.ZenStatus.nmap.util import executeNmapForIps
 from Products.ZenHub.PBDaemon import FakeRemote, PBDaemon
 from Products.ZenHub.services  import DiscoverService, ModelerService
 from Products.ZenHub.services.DiscoverService import JobPropertiesProxy
