@@ -445,6 +445,7 @@ class SshPerformanceCollectionTask(BaseTask):
         deferredCmds = []
         for datasource in self._datasources:
             datasource.deviceConfig = self._device
+            #if  datasource.command in cacheableDS:
             if datasource.command in cacheableDS:
                 cacheableDS[datasource.command].append(datasource)
             else:

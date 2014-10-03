@@ -82,8 +82,8 @@ class ProcessRunner(ProcessProtocol):
     client = None
     proxy = None
     exitCode = None
-    output = []
-    stderr = []
+    output = None
+    stderr = None
 
     def connect(self, task=None):
         """
@@ -139,12 +139,16 @@ class ProcessRunner(ProcessProtocol):
         """
         Stores the result of stdout as it arrives from the process
         """
+        if self.output == None:
+            self.output = []
         self.output.append(data)
 
     def errReceived(self, data):
         """
         Stored the result of stderr as it arrives from the process
         """
+        if self.stderr == None:
+            self.stderr = []
         self.stderr.append(data)
 
     def processEnded(self, reason):
@@ -154,8 +158,14 @@ class ProcessRunner(ProcessProtocol):
         self.exitCode = reason.value.exitCode
         if self.exitCode is not None:
             self._timer.cancel()
-            self.output = ''.join(self.output)
-            self.stderr = ''.join(self.stderr)
+            if self.output == None:
+                self.output = ''
+            else:
+                self.output = ''.join(self.output)
+            if self.stderr == None:
+                self.stderr = ''
+            else:
+                self.stderr = ''.join(self.stderr)
 
             msg = "Datasource: %s Received exit code: %s Output: \n%r"
             data = [self.command.ds, self.exitCode, self.output]
