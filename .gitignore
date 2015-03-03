@@ -25,3 +25,8 @@ bin/zenvmwareperf
 *.iml
 *.pyc
 *~
+
+
+Products/LDAPMultiPlugins/
+Products/LDAPUserFolder/
+Products/MemcachedManager/
