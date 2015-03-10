@@ -39,6 +39,8 @@ from Products.ZenModel.OperatingSystem import OperatingSystem
 from Products.Zuul.utils import getZProperties, allowedRolesAndUsers
 from interfaces import IGloballyIndexed, IPathReporter, IIndexableWrapper
 
+import solrcatalog.indexes as solr
+
 _MARKER = object()
 _CACHE = defaultdict(dict)
 _CACHE_RESULTS = []
@@ -222,6 +224,11 @@ class IndexableWrapper(object):
         Whether or not monitored. Only for Components.
         """
 
+    def monitored_bool(self):
+        """
+        Boolean version of monitored, for Solr.
+        """
+
     def searchKeywordsForChildren(self):
         """
         For searchables
@@ -271,6 +278,9 @@ class ComponentWrapper(SearchableMixin,IndexableWrapper):
         if self._context.monitored():
             return '1'
         return ''
+
+    def monitored_bool(self):
+        return self._context.monitored()
 
     def collectors(self):
         return self._context.getCollectors()
@@ -461,6 +471,28 @@ class GlobalCatalog(ZCatalog):
         Dispatches to self._catalog.addIndex
         """
         return self._catalog.addIndex(id, index)
+
+
+def initializeSolrCatalog(catalog):
+    catalog.addIndex('uid', solr.StringIndex('uid'))
+    catalog.addIndex('id', solr.StringIndex('id'))
+    catalog.addIndex('meta_type', solr.StringIndex('meta_type'))
+    catalog.addIndex('name', solr.StringIndex('name'))
+    catalog.addIndex('ipAddress', solr.TrieIntIndex('ipAddress', multivalued=True))
+    catalog.addIndex('objectImplements', solr.StringIndex('objectImplements', multivalued=True))
+    catalog.addIndex('allowedRolesAndUsers', solr.StringIndex('allowedRolesAndUsers', multivalued=True))
+    catalog.addIndex('productionState', solr.StringIndex("productionState"))
+    catalog.addIndex('monitored', solr.BooleanIndex("monitored"))
+    catalog.addIndex('path', solr.PathIndex("path", multivalued=True))
+    catalog.addIndex('collectors', solr.StringIndex("collectors", multivalued=True))
+    catalog.addIndex('productKeys', solr.StringIndex("productKeys", multivalued=True))
+    catalog.addIndex('searchKeywords', solr.StringIndex("searchKeywords", multivalued=True))
+    catalog.addIndex('macAddresses', solr.StringIndex("macAddresses", multivalued=True))
+
+    catalog.addIndex('uuid', solr.StoredMetadata("uuid"))
+    catalog.addIndex('zProperties', solr.StoredMetadata("zProperties", multivalued=True))
+    catalog.addIndex('searchIcon', solr.StoredMetadata("searchIcon"))
+    catalog.addIndex('searchExcerpt', solr.StoredMetadata("searchExcerpt"))
 
 
 def initializeGlobalCatalog(catalog):
