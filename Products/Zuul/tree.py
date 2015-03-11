@@ -31,6 +31,22 @@ import logging
 log = logging.getLogger("zen.tree")
 
 
+def advancedQueryToLucene(q, idxmap=None):
+    idxmap = idxmap or {}
+    if isinstance(q, And):
+        return "(%s)" % " AND ".join(advancedQueryToLucene(sq, idxmap) for sq in q._subqueries)
+    elif isinstance(q, Or):
+        return "(%s)" % " OR ".join(advancedQueryToLucene(sq, idxmap) for sq in q._subqueries)
+    elif isinstance(q, Eq):
+        return "%s:%s" % (idxmap.get(q._idx, q._idx), q._term)
+    elif isinstance(q, In):
+        return "(%s)" % " OR ".join('%s:"%s"' % (idxmap.get(q._idx, q._idx), v) for v in q._term)
+    elif isinstance(q, MatchRegexp):
+        return '%s:/%s/' % (idxmap.get(q._idx, q._idx), q._term)
+    elif isinstance(q, Generic):
+        return '%s:"%s"' % (idxmap.get(q._idx, q._idx), q._term['query'][0])
+
+
 class TreeNode(object):
     """
     Adapts a brain.
@@ -232,7 +248,8 @@ class CatalogTool(object):
 
     def __init__(self, context):
         self.context = context
-        self.catalog = context.getPhysicalRoot().zport.global_catalog
+        # self.catalog = context.getPhysicalRoot().zport.global_catalog
+        self.catalog = context.getPhysicalRoot().zport.dmd.solr_catalog
         self.catalog._v_caches = getattr(self.catalog, "_v_caches", OOBTree())
 
     def getBrain(self, path):
@@ -241,24 +258,11 @@ class CatalogTool(object):
             path = '/'.join(path.getPhysicalPath())
         elif isinstance(path, tuple):
             path = '/'.join(path)
-        cat = self.catalog._catalog
-        try:
-            rid = cat.uids[path]
-            if rid:
-                return cat.__getitem__(rid)
-        except (KeyError, UncataloguedObjectException), e:
-            log.error("Unable to get brain. Trying to reindex: %s", path)
-            try:
-                dmd = self.context.dmd
-                obj = dmd.unrestrictedTraverse(path)
-                obj.index_object()
-                cat.catalogObject(obj, path)
-                log.info("Successfully reindexed: %s", path)
-            except Exception, e:
-                log.exception("Unable to reindex %s: %s", path, e)
-        rid = cat.uids[path]
-        if rid:
-            return cat.__getitem__(rid)
+        brains = self.catalog.get(path)
+        if brains:
+            return brains[0]
+        else:
+            return None
 
     def parents(self, path):
         # Make sure it's actually a path
@@ -327,16 +331,16 @@ class CatalogTool(object):
                 sortinfo = (orderby, 'desc')
             else:
                 sortinfo = (orderby, 'asc')
-            return (sortinfo,)
+            return " ".join(sortinfo)
 
     def _queryCatalog(self, types=(), orderby=None, reverse=False, paths=(),
                      depth=None, query=None, filterPermissions=True):
         query = self._buildQuery(types, paths, depth, query, filterPermissions)
-        sort = self._buildSort(orderby, reverse)
-        args = (query, sort) if sort else (query, )
-
-        # Get the brains
-        result = self.catalog.evalAdvancedQuery(*args)
+        #sort = self._buildSort(orderby, reverse)
+        lucene = advancedQueryToLucene(query, self.catalog.index_map())
+        print lucene
+        result = self.catalog.search(lucene, sort_index=orderby, reverse=reverse)
+        #result = self.catalog.evalAdvancedQuery(*args)
         return result
 
     def search(self, types=(), start=0, limit=None, orderby=None,
@@ -345,20 +349,20 @@ class CatalogTool(object):
 
         # if orderby is not an index then _queryCatalog, then query results
         # will be unbrained and sorted
-        areBrains = orderby in self.catalog._catalog.indexes or orderby is None
+        areBrains = orderby in self.catalog._indexes or orderby is None
         queryOrderby = orderby if areBrains else None
         infoFilters = {}
 
-        if globFilters:
-            for key, value in globFilters.iteritems():
-                if self.catalog.hasIndexForTypes(types, key):
-                    if query:
-                        query = And(query, MatchRegexp(key, '(?i).*%s.*' % value))
-                    else:
-                        query = MatchRegexp(key, '(?i).*%s.*' % value)
-                else:
-                    areBrains = False
-                    infoFilters[key] = value
+        #if globFilters:
+        #    for key, value in globFilters.iteritems():
+        #        if self.catalog.hasIndexForTypes(types, key):
+        #            if query:
+        #                query = And(query, MatchRegexp(key, '(?i).*%s.*' % value))
+        #            else:
+        #                query = MatchRegexp(key, '(?i).*%s.*' % value)
+        #        else:
+        #            areBrains = False
+        #            infoFilters[key] = value
         try:
             queryResults = self._queryCatalog(types, queryOrderby, reverse, paths, depth, query, filterPermissions)
         except sre_constants.error:

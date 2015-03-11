@@ -14,12 +14,15 @@ from zope.component import adapter
 from zope.container.interfaces import IObjectAddedEvent, IObjectMovedEvent
 from zope.container.interfaces import IObjectRemovedEvent
 from OFS.interfaces import IObjectWillBeMovedEvent, IObjectWillBeAddedEvent
-from interfaces import IIndexingEvent, IGloballyIndexed, ITreeSpanningComponent, IDeviceOrganizer
+from .interfaces import IIndexingEvent, IGloballyIndexed, IIndexableWrapper
+from .interfaces import ITreeSpanningComponent, IDeviceOrganizer
 from paths import devicePathsFromComponent
+
 
 
 class IndexingEvent(object):
     implements(IIndexingEvent)
+
     def __init__(self, object, idxs=None, update_metadata=True):
         self.object = object
         self.idxs = idxs
@@ -29,7 +32,9 @@ class IndexingEvent(object):
 @adapter(IGloballyIndexed, IIndexingEvent)
 def onIndexingEvent(ob, event):
     try:
-        catalog = ob.getPhysicalRoot().zport.global_catalog
+        # catalog = ob.getPhysicalRoot().zport.global_catalog
+        solr = ob.getPhysicalRoot().zport.dmd.solr_catalog
+        print "SOLR_CATALOG:", solr
     except (KeyError, AttributeError):
         # Migrate script hasn't run yet; ignore indexing
         return
@@ -42,10 +47,13 @@ def onIndexingEvent(ob, event):
         evob = ob
     path = evob.getPrimaryPath()
     # Ignore things dmd or above
-    if len(path)<=3 or path[2]!='dmd':
+    if len(path) <= 3 or path[2] != 'dmd':
         return
-    catalog.catalog_object(evob, idxs=idxs,
-                           update_metadata=event.update_metadata)
+    # catalog.catalog_object(evob, idxs=idxs,
+    #                        update_metadata=event.update_metadata)
+    solr.catalog_object(IIndexableWrapper(evob), idxs=None,
+            update_metadata=event.update_metadata)
+    print "SO CATALOGED"
 
 
 @adapter(IGloballyIndexed, IObjectWillBeMovedEvent)
@@ -55,18 +63,20 @@ def onObjectRemoved(ob, event):
     """
     if not IObjectWillBeAddedEvent.providedBy(event):
         try:
-            catalog = ob.getPhysicalRoot().zport.global_catalog
+            # catalog = ob.getPhysicalRoot().zport.global_catalog
+            solr = ob.getPhysicalRoot().zport.dmd.solr_catalog
         except (KeyError, AttributeError):
             # Migrate script hasn't run yet; ignore indexing
             return
         path = ob.getPrimaryPath()
         # Ignore things dmd or above
-        if len(path)<=3 or path[2]!='dmd':
+        if len(path) <= 3 or path[2] != 'dmd':
             return
         uid = '/'.join(path)
-        if catalog.getrid(uid) is None:
-            return
-        catalog.uncatalog_object(uid)
+        # if catalog.getrid(uid) is None:
+        #     return
+        # catalog.uncatalog_object(uid)
+        solr.uncatalog_object(uid)
 
 
 @adapter(IGloballyIndexed, IObjectAddedEvent)

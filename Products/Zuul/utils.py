@@ -281,7 +281,7 @@ class PathIndexCache(object):
     Cache tree search results for further queries.
     """
     def __init__(self, results, instanceresults=None, relnames=('devices',), treePrefix=None):
-        self._brains = IOBTree()
+        self._brains = OOBTree()
         self._index = OOBTree()
         self._instanceidx = OOBTree()
         self.insert(self._index, results)
