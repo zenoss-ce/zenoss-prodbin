@@ -148,7 +148,7 @@ class IndexableWrapper(object):
         ip = getter()
         if ip:
             ip = ip.partition('/')[0]
-            return str(numbip(ip))
+            return numbip(ip)
 
     @property
     def zProperties(self):
@@ -178,8 +178,8 @@ class IndexableWrapper(object):
 
         This is a MultiPathIndex on the catalog.
         """
-        #return ['/'.join(p) for p in IPathReporter(self._context).getPaths()]
-        return IPathReporter(self._context).getPaths()
+        return ['/'.join(p) for p in IPathReporter(self._context).getPaths()]
+        #return IPathReporter(self._context).getPaths()
 
     def name(self):
         """
@@ -306,7 +306,7 @@ class DeviceWrapper(SearchableMixin,IndexableWrapper):
         return self._context.getMacAddresses()
 
     def productionState(self):
-        return str(self._context.productionState)
+        return self._context.productionState
 
     @memoized_in_context
     def searchKeywordsForChildren(self):
@@ -487,7 +487,7 @@ def initializeSolrCatalog(catalog):
     catalog.addIndex('ipAddress', solr.TrieIntIndex('ipAddress', multivalued=True))
     catalog.addIndex('objectImplements', solr.StringIndex('objectImplements', multivalued=True))
     catalog.addIndex('allowedRolesAndUsers', solr.StringIndex('allowedRolesAndUsers', multivalued=True))
-    catalog.addIndex('productionState', solr.StringIndex("productionState"))
+    catalog.addIndex('productionState', solr.IntIndex("productionState"))
     catalog.addIndex('monitored', solr.BooleanIndex("monitored"))
     catalog.addIndex('path', solr.PathIndex("path", multivalued=True))
     catalog.addIndex('collectors', solr.StringIndex("collectors", multivalued=True))
