@@ -39,6 +39,7 @@ from Products.ZenModel.OperatingSystem import OperatingSystem
 from Products.Zuul.utils import getZProperties, allowedRolesAndUsers
 from interfaces import IGloballyIndexed, IPathReporter, IIndexableWrapper
 
+from solrcatalog import SolrZCatalog
 import solrcatalog.indexes as solr
 
 _MARKER = object()
@@ -472,6 +473,10 @@ class GlobalCatalog(ZCatalog):
         """
         return self._catalog.addIndex(id, index)
 
+
+class SolrGlobalCatalog(SolrZCatalog):
+    def get_solr_uri(self):
+        return "http://localhost:8983/solr/global_catalog"
 
 def initializeSolrCatalog(catalog):
     catalog.addIndex('uid', solr.StringIndex('uid'))
