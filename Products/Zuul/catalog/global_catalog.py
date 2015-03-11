@@ -178,7 +178,8 @@ class IndexableWrapper(object):
 
         This is a MultiPathIndex on the catalog.
         """
-        return ['/'.join(p) for p in IPathReporter(self._context).getPaths()]
+        #return ['/'.join(p) for p in IPathReporter(self._context).getPaths()]
+        return IPathReporter(self._context).getPaths()
 
     def name(self):
         """
