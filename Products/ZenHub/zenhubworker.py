@@ -11,7 +11,7 @@
 import Globals
 from Products.DataCollector.Plugins import loadPlugins
 from Products.ZenHub import PB_PORT
-from Products.ZenHub.zenhub import LastCallReturnValue
+from Products.ZenHub.zenhub import LastCallReturnValue, metricWriter
 from Products.ZenHub.PBDaemon import translateError, RemoteConflictError
 from Products.ZenUtils.Time import isoDateTime
 from Products.ZenUtils.ZCmdBase import ZCmdBase
@@ -31,6 +31,8 @@ import cPickle as pickle
 import time
 import signal
 import os
+
+
 
 IDLE = "None/None"
 class _CumulativeWorkerStats(object):
@@ -59,6 +61,12 @@ class zenhubworker(ZCmdBase, pb.Referenceable):
         self.current = IDLE
         self.currentStart = 0
         self.numCalls = 0
+        self._metric_writer = metricWriter(
+            "admin",
+            "zenoss",
+            self.options.metrics_store_url
+        )
+
         try:
             self.log.debug("establishing SIGUSR2 signal handler")
             signal.signal(signal.SIGUSR2, self.sighandler_USR2)
@@ -81,6 +89,7 @@ class zenhubworker(ZCmdBase, pb.Referenceable):
         c = credentials.UsernamePassword(self.options.username,
                                          self.options.password)
         factory.gotPerspective = self.gotPerspective
+
         def stop(*args):
             reactor.callLater(0, reactor.stop)
         factory.clientConnectionLost = stop
@@ -221,8 +230,27 @@ class zenhubworker(ZCmdBase, pb.Referenceable):
             self.log.debug("Time in %s: %.2f", method, secs)
             # update call stats for this method on this service
             service.callStats[method].addOccurrence(secs, finishTime)
+
             service.callTime += secs
             self.current = IDLE
+
+            tags = {
+                'daemon': 'zenhubworker',
+                'monitor': instance,
+                'metricType': 'GAUGE',
+                'internal': True
+            }
+            name = "zenhubworker." + method + ".time"
+            self._metric_writer.write_metric(name, secs, finishTime, tags)
+
+            tags = {
+                'daemon': 'zenhubworker',
+                'monitor': instance,
+                'metricType': 'GAUGE',
+                'internal': True
+            }
+            name = "zenhubworker." + method + ".count"
+            self._metric_writer.write_metric(name, 1, finishTime, tags)
 
             if lastCall:
                 reactor.callLater(1, self._shutdown)
@@ -263,6 +291,15 @@ class zenhubworker(ZCmdBase, pb.Referenceable):
                                type='int',
                                help="Maximum number of remote calls before restarting worker",
                                default=200)
+        self.parser.add_option('--metrics-store-url', dest='metrics_store_url',
+            type='string', default='http://localhost:8080/api/metrics/store',
+            help='URL for posting internal metrics (default: %default)')
+        self.parser.add_option(
+            "--zauth-username", dest="zauthUsername",
+            help="Username to use when publishing to metric consumer. Default is %default")
+        self.parser.add_option(
+            "--zauth-password", dest="zauthPassword",
+            help="Password to use when publishing to metric consumer. Default is %default")
 
 if __name__ == '__main__':
     zhw = zenhubworker()
