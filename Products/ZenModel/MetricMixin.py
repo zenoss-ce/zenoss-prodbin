@@ -98,15 +98,21 @@ class MetricMixin(object):
 
     def getGraphObjects(self):
         """
-        Returns GraphDefinition objects for all the templates bound
+        Returns GraphDefinition objects and contexts in a tuple for all the templates bound
         to this object.
         """
         graphs = []
         for template in self.getRRDTemplates():
             for g in template.getGraphDefs():
-                graphs.append(g)
+                graphs.append((g, self))
         return graphs
 
+    def getGraphObject(self, graphId):
+        return next((g for t in self.getRRDTemplates()
+                                for g in t.getGraphDefs()
+                                    if g.id == graphId),
+                         None)
+    
     def getDefaultGraphDefs(self, drange=None):
         """Backwards compatible layer for zenpacks. """
         log.warn('As of zenoss 5.x and above getDefaultGraphDefs is not supported, use getGraphObjects instead.')
