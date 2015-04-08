@@ -533,11 +533,11 @@ class GlobalCatalogFactory(object):
     implements(IGlobalCatalogFactory)
 
     def create(self, portal):
-        catalog = GlobalCatalog()
+        catalog = SolrGlobalCatalog("global_catalog")
         self.setupCatalog(portal, catalog)
 
     def setupCatalog(self, portal, catalog):
-        initializeGlobalCatalog(catalog)
+        initializeSolrCatalog(catalog)
         portal._setObject(globalCatalogId, catalog)
 
     def remove(self, portal):

@@ -32,9 +32,7 @@ class IndexingEvent(object):
 @adapter(IGloballyIndexed, IIndexingEvent)
 def onIndexingEvent(ob, event):
     try:
-        # catalog = ob.getPhysicalRoot().zport.global_catalog
-        solr = ob.getPhysicalRoot().zport.dmd.solr_catalog
-        print "SOLR_CATALOG:", solr
+        catalog = ob.getPhysicalRoot().zport.global_catalog
     except (KeyError, AttributeError):
         # Migrate script hasn't run yet; ignore indexing
         return
@@ -49,11 +47,8 @@ def onIndexingEvent(ob, event):
     # Ignore things dmd or above
     if len(path) <= 3 or path[2] != 'dmd':
         return
-    # catalog.catalog_object(evob, idxs=idxs,
-    #                        update_metadata=event.update_metadata)
-    solr.catalog_object(IIndexableWrapper(evob), idxs=None,
+    catalog.catalog_object(evob, idxs=None,
             update_metadata=event.update_metadata)
-    print "SO CATALOGED"
 
 
 @adapter(IGloballyIndexed, IObjectWillBeMovedEvent)
@@ -63,8 +58,7 @@ def onObjectRemoved(ob, event):
     """
     if not IObjectWillBeAddedEvent.providedBy(event):
         try:
-            # catalog = ob.getPhysicalRoot().zport.global_catalog
-            solr = ob.getPhysicalRoot().zport.dmd.solr_catalog
+            catalog = ob.getPhysicalRoot().zport.global_catalog
         except (KeyError, AttributeError):
             # Migrate script hasn't run yet; ignore indexing
             return
@@ -73,10 +67,7 @@ def onObjectRemoved(ob, event):
         if len(path) <= 3 or path[2] != 'dmd':
             return
         uid = '/'.join(path)
-        # if catalog.getrid(uid) is None:
-        #     return
-        # catalog.uncatalog_object(uid)
-        solr.uncatalog_object(uid)
+        catalog.uncatalog_object(uid)
 
 
 @adapter(IGloballyIndexed, IObjectAddedEvent)
