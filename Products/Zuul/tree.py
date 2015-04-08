@@ -97,7 +97,11 @@ class TreeNode(object):
 
     @property
     def uuid(self):
-        return self._object.uuid
+        try:
+            return self._object.uuid
+        except AttributeError:
+            log.critical("Object %s did not have a uuid and should", self.uid)
+            raise
 
     @property
     def uid(self):
@@ -248,8 +252,7 @@ class CatalogTool(object):
 
     def __init__(self, context):
         self.context = context
-        # self.catalog = context.getPhysicalRoot().zport.global_catalog
-        self.catalog = context.getPhysicalRoot().zport.dmd.solr_catalog
+        self.catalog = context.getPhysicalRoot().zport.global_catalog
         self.catalog._v_caches = getattr(self.catalog, "_v_caches", OOBTree())
 
     def getBrain(self, path):
