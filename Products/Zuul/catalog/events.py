@@ -47,8 +47,7 @@ def onIndexingEvent(ob, event):
     # Ignore things dmd or above
     if len(path) <= 3 or path[2] != 'dmd':
         return
-    catalog.catalog_object(evob, idxs=None,
-            update_metadata=event.update_metadata)
+    catalog.catalog_object(evob, idxs=None, update_metadata=event.update_metadata)
 
 
 @adapter(IGloballyIndexed, IObjectWillBeMovedEvent)

@@ -111,6 +111,7 @@ class TemplateLeaf(TemplateInfo):
 
 MARKER = object()
 def memoize(f):
+    return f
     def inner(self, *args, **kwargs):
         d = getattr(self._get_cache, '_memo', None)
         if d is None:

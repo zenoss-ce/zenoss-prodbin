@@ -476,8 +476,27 @@ class GlobalCatalog(ZCatalog):
 
 
 class SolrGlobalCatalog(SolrZCatalog):
+
+    def catalog_object(self, obj, uid=None, **kwargs):
+        if not isinstance(obj, self._get_forbidden_classes()):
+            ob = IIndexableWrapper(obj)
+            kwargs.pop('idxs', None)
+            SolrZCatalog.catalog_object(self, ob, uid, **kwargs)
+
+    def index_object_under_paths(self, obj, paths):
+        if not isinstance(obj, self._get_forbidden_classes()):
+            self.catalog_object(obj, idxs=["path"])
+
+    def unindex_object_from_paths(self, obj, paths):
+        if not isinstance(obj, self._get_forbidden_classes()):
+            self.catalog_object(obj, idxs=["path"])
+
     def get_solr_uri(self):
         return "http://localhost:8983/solr/global_catalog"
+
+    def _get_forbidden_classes(self):
+        return (Software, OperatingSystem)
+
 
 def initializeSolrCatalog(catalog):
     catalog.addIndex('uid', solr.StringIndex('uid'))
