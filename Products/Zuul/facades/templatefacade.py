@@ -51,7 +51,7 @@ class TemplateFacade(ZuulFacade):
                     nodes[brain.id] = ITemplateNode(brain.getObject())
                 except UncataloguedObjectException:
                     pass
-        for key in sorted(nodes.keys(), key=str.lower):
+        for key in sorted(nodes.keys(), key=lambda s:s.lower()):
             yield nodes[key]
 
     def _getTemplateLeaves(self, id):

@@ -97,11 +97,7 @@ class TreeNode(object):
 
     @property
     def uuid(self):
-        try:
-            return self._object.uuid
-        except AttributeError:
-            log.critical("Object %s did not have a uuid and should", self.uid)
-            raise
+        return self._object.uuid
 
     @property
     def uid(self):
