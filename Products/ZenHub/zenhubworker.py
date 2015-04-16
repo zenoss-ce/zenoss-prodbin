@@ -229,13 +229,15 @@ class zenhubworker(ZCmdBase, pb.Referenceable):
             secs = finishTime - now
             self.log.debug("Time in %s: %.2f", method, secs)
             # update call stats for this method on this service
-            service.callStats[method].addOccurrence(secs, finishTime)
+            stats = service.callStats[method]
+            stats.addOccurrence(secs, finishTime)
 
             service.callTime += secs
             self.current = IDLE
 
             tags = {
                 'daemon': 'zenhubworker',
+                'workerpid': self.pid,
                 'monitor': instance,
                 'metricType': 'GAUGE',
                 'internal': True
@@ -243,14 +245,8 @@ class zenhubworker(ZCmdBase, pb.Referenceable):
             name = "zenhubworker." + method + ".time"
             self._metric_writer.write_metric(name, secs, finishTime, tags)
 
-            tags = {
-                'daemon': 'zenhubworker',
-                'monitor': instance,
-                'metricType': 'GAUGE',
-                'internal': True
-            }
             name = "zenhubworker." + method + ".count"
-            self._metric_writer.write_metric(name, 1, finishTime, tags)
+            self._metric_writer.write_metric(name, stats.numoccurrences, finishTime, tags)
 
             if lastCall:
                 reactor.callLater(1, self._shutdown)
