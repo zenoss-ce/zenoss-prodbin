@@ -51,6 +51,8 @@ class ToManyRelationshipBase(
     _count = None
 
     def setCount(self):
+        # Disable count-setting
+        return
         self._count = len(self._objects)
         # persist the changes if we are on the object graph
         try:
@@ -61,6 +63,7 @@ class ToManyRelationshipBase(
 
     def countObjects(self):
         """Return the number of objects in this relationship"""
+        return 0
         if self._count is None:
             self.setCount()
         return self._count

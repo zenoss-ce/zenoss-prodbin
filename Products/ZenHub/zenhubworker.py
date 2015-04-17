@@ -31,6 +31,8 @@ import cPickle as pickle
 import time
 import signal
 import os
+import redis
+from Products.ZenUtils.RedisUtils import parseRedisUrl
 
 
 
@@ -55,6 +57,8 @@ class _CumulativeWorkerStats(object):
 class zenhubworker(ZCmdBase, pb.Referenceable):
     "Execute ZenHub requests in separate process"
 
+    DEFAULT_REDIS_URL = 'redis://localhost:6379/0'
+
     def __init__(self):
         ZCmdBase.__init__(self)
 
@@ -66,6 +70,8 @@ class zenhubworker(ZCmdBase, pb.Referenceable):
             "zenoss",
             self.options.metrics_store_url
         )
+        self._redis = redis.StrictRedis(
+            **parseRedisUrl(self.DEFAULT_REDIS_URL))
 
         try:
             self.log.debug("establishing SIGUSR2 signal handler")
@@ -237,16 +243,17 @@ class zenhubworker(ZCmdBase, pb.Referenceable):
 
             tags = {
                 'daemon': 'zenhubworker',
-                'workerpid': self.pid,
                 'monitor': instance,
                 'metricType': 'GAUGE',
                 'internal': True
             }
+
             name = "zenhubworker." + method + ".time"
             self._metric_writer.write_metric(name, secs, finishTime, tags)
 
             name = "zenhubworker." + method + ".count"
-            self._metric_writer.write_metric(name, stats.numoccurrences, finishTime, tags)
+            count = self._redis.incr(name, 1)
+            self._metric_writer.write_metric(name, count, finishTime, tags)
 
             if lastCall:
                 reactor.callLater(1, self._shutdown)
