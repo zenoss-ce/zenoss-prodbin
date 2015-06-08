@@ -1,0 +1,16 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:five="http://namespaces.zope.org/five"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    i18n_domain="Products.Jobber">
+
+    <include package="Products.ZenModel" file="permissions.zcml"/>
+
+    <browser:page
+        class=".manager.JobLogDownload"
+        name="joblog"
+        for="*"
+        permission="zenoss.Common"
+        />
+
+</configure>
