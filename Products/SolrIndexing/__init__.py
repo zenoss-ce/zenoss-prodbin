@@ -6,3 +6,6 @@
 # License.zenoss under the directory where your Zenoss product is installed.
 #
 ##############################################################################
+
+
+from .interfaces import IIndexedFields, IIndexed  # NOQA
