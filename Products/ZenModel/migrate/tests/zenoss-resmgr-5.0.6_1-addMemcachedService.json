@@ -6070,7 +6070,7 @@
        "Default": 0
      },
      "ChangeOptions": null,
-     "ImageID": "67nh3y829fh3dsemstmfjpg11/resmgr_5.0:latest",
+     "ImageID": "",
      "PoolID": "default",
      "DesiredState": 1,
      "HostPolicy": "",
@@ -6120,7 +6120,7 @@
      "Runs": null,
      "Commands": null,
      "RAMCommitment": "1G",
-     "CPUCommitment": 0,
+     "CPUCommitment": 1,
      "HealthChecks": {
        "answering": {
          "Script": "{ echo stats; sleep 1; } | nc 127.0.0.1 11211 | grep -q uptime",

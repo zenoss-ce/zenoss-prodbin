@@ -45,7 +45,8 @@ class AddMemcachedService(Migrate.Step):
 def default_memcached_service():
     return {
         "CPUCommitment": 1,
-        "Command": "/bin/memcached -u nobody -v -m {{percentScale .RAMCommitment 0.9 | bytesToMB}}",
+        #"Command": "/bin/memcached -u nobody -v -m {{percentScale .RAMCommitment 0.9 | bytesToMB}}",
+        "Startup": "/bin/memcached -u nobody -v -m {{percentScale .RAMCommitment 0.9 | bytesToMB}}",
         "ConfigFiles": {
             "/etc/sysconfig/memcached": {
                 "Filename": "/etc/sysconfig/memcached",
@@ -55,6 +56,7 @@ def default_memcached_service():
             }
         },
         "Description": "Free & open source, high-performance, distributed memory object caching system",
+        "DesiredState": 1,
         "Endpoints": [
             {
                 "Application": "memcached",
@@ -70,9 +72,12 @@ def default_memcached_service():
                 "Script": "{ echo stats; sleep 1; } | nc 127.0.0.1 11211 | grep -q uptime"
             }
         },
-        "ImageID": os.environ['SERVICED_SERVICE_IMAGE'],
-        "Instances": {
-            "Min": 1
+        "ImageID": os.environ.get('SERVICED_SERVICE_IMAGE', ''),
+        "Instances": 1,
+        "InstanceLimits": {
+            "Min": 1,
+            "Max": 0,
+            "Default": 0,
         },
         "Launch": "auto",
         "Name": "memcached",

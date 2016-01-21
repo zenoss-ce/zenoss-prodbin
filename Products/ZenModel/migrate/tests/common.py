@@ -9,6 +9,10 @@ import Globals
 from servicemigration import context, service
 
 
+class DONTCARE(object):
+    pass
+
+
 def fakeContextFromFile(jsonfile):
     jsonfile = os.path.join(os.path.dirname(__file__), jsonfile)
     class FakeServiceContext(context.ServiceContext):
@@ -61,6 +65,10 @@ class FakeDmd:
 def compare(this, that, path=None):
     path = path or []
     iab = []
+    if isinstance(this, DONTCARE):
+        return True, None
+    if isinstance(that, DONTCARE):
+        return True, None
     if isinstance(this, list):
         if not isinstance(that, list):
             return False, path
