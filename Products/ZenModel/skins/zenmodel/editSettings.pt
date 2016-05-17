@@ -22,11 +22,11 @@ function popupMapHelp() {
     mySimpleDialog.render(currentDocument().body);
     mySimpleDialog.show();
 }
- 
-setTimeout(function () { 
-    document.getElementById('smtpUser').autocomplete = 'off'; 
-    document.getElementById('smtpPass').autocomplete = 'off'; 
-    }, 1); 
+
+setTimeout(function () {
+    document.getElementById('smtpUser').autocomplete = 'off';
+    document.getElementById('smtpPass').autocomplete = 'off';
+    }, 1);
 var loader=YAHOO.zenoss.getLoader();
 loader.require(['container']);
 loader.insert();
@@ -43,7 +43,7 @@ loader.insert();
             tabletitle string:${message} ${here/getCurrentUserNowString}">
 
         <tal:block metal:use-macro="here/zenuimacros/macros/zentable">
-          
+
 
         <!--====Optional titlebar slots=============
 
@@ -56,7 +56,7 @@ loader.insert();
             ==========================================-->
 
         <tal:block metal:fill-slot="zentablecontents">
-        <!-- BEGIN TABLE CONTENTS -->        
+        <!-- BEGIN TABLE CONTENTS -->
     <tr class="even">
         <td class="noselect tableheader" i18n:translate='' align="left">Instance Identifier</td>
         <td class="tablevalues">
@@ -171,7 +171,7 @@ loader.insert();
             tal:content="python: '\n'.join(here.interfaceStateConversions)"></textarea>
       </td>
     </tr>
-    -->    
+    -->
     <tr tal:condition="python:here.dmd.getProductName()=='core'" class="odd">
      <td class="tableheader" i18n:translate="Google Maps API Key" align="left">Google Maps API Key
          <a href="javascript:popupMapHelp()" style="font-size:80%">Help</a>

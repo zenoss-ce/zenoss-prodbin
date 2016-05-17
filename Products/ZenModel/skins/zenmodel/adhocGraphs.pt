@@ -1,0 +1,7 @@
+<tal:block metal:use-macro="here/page_macros/old-new">
+<tal:block metal:fill-slot="title">Ad Hoc Graphs</tal:block>
+<tal:block metal:fill-slot="contentPane">
+
+hi
+</tal:block>
+</tal:block>

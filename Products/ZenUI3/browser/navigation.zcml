@@ -275,5 +275,15 @@
             permission="zenoss.ManageDMD"
             layer="..navigation.interfaces.IZenossNav"
             />
+        <browser:viewlet
+            name="Ad Hoc Graphs"
+            url="/zport/dmd/adhocGraphs"
+            weight="7"
+            parentItem="Advanced"
+            manager="..navigation.interfaces.ISecondaryNavigationMenu"
+            class="..navigation.menuitem.SecondaryNavigationMenuItem"
+            permission="zenoss.ManageDMD"
+            layer="..navigation.interfaces.IZenossNav"
+            />
 
 </configure>

@@ -31,4 +31,11 @@
         permission="zope2.Public"
         />
 
+<browser:page
+    name="adhocGraphs"
+    for="*"
+    class=".resources.AdHocGraphs"
+    permission="zope2.Public"
+        />
+
 </configure>
