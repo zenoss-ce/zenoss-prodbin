@@ -1,0 +1,1075 @@
+{
+   "ID": "",
+   "Name": "HDFS",
+   "Version": "",
+   "Description": "HDFS Cluster",
+   "Services": [
+     {
+       "Name": "HDFS",
+       "Title": "",
+       "Version": "",
+       "Command": "",
+       "Description": "HDFS Cluster",
+       "Environment": null,
+       "Tags": null,
+       "ImageID": "",
+       "Instances": {
+         "Min": 0,
+         "Max": 0,
+         "Default": 0
+       },
+       "ChangeOptions": null,
+       "Launch": "auto",
+       "HostPolicy": "",
+       "Hostname": "",
+       "Privileged": false,
+       "ConfigFiles": {},
+       "Context": null,
+       "Endpoints": null,
+       "Services": [
+         {
+           "Name": "SecondaryNameNode",
+           "Title": "",
+           "Version": "",
+           "Command": "/usr/bin/run-hdfs-secondary-namenode",
+           "Description": "HDFS Secondary NameNode",
+           "Environment": [
+             "HADOOP_ROOT_LOG_LEVEL=INFO",
+             "HADOOP_HEAPSIZE={{bytesToMB .RAMCommitment}}"
+           ],
+           "Tags": [
+             "daemon"
+           ],
+           "ImageID": "zenoss/hdfs:v3",
+           "Instances": {
+             "Min": 1,
+             "Max": 1,
+             "Default": 0
+           },
+           "ChangeOptions": null,
+           "Launch": "auto",
+           "HostPolicy": "",
+           "Hostname": "localhost",
+           "Privileged": true,
+           "ConfigFiles": {
+             "/opt/hadoop/etc/hadoop/README.md": {
+               "Filename": "/opt/hadoop/etc/hadoop/README.md",
+               "Owner": "",
+               "Permissions": "",
+               "Content": "Note: files in this directory are shared by NameNode, DataNode, and SecondaryNameNode services by means of symlinks. \n"
+             },
+             "/opt/hadoop/etc/hadoop/core-site.xml": {
+               "Filename": "/opt/hadoop/etc/hadoop/core-site.xml",
+               "Owner": "hdfs:hdfs",
+               "Permissions": "0775",
+               "Content": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c?xml-stylesheet type=\"text/xsl\" href=\"configuration.xsl\"?\u003e\n\u003c!--\n  Licensed under the Apache License, Version 2.0 (the \"License\");\n  you may not use this file except in compliance with the License.\n  You may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\n  Unless required by applicable law or agreed to in writing, software\n  distributed under the License is distributed on an \"AS IS\" BASIS,\n  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n  See the License for the specific language governing permissions and\n  limitations under the License. See accompanying LICENSE file.\n--\u003e\n\n\u003c!-- Put site-specific property overrides in this file. --\u003e\n\n\u003cconfiguration\u003e\n    \u003cproperty\u003e  \n        \u003cname\u003efs.defaultFS\u003c/name\u003e \n        \u003cvalue\u003ehdfs://0.0.0.0:8020\u003c/value\u003e\n        \u003cdescription\u003eEnter your NameNode hostname\u003c/description\u003e\n    \u003c/property\u003e\n\u003c/configuration\u003e\n"
+             },
+             "/opt/hadoop/etc/hadoop/hdfs-site.xml": {
+               "Filename": "/opt/hadoop/etc/hadoop/hdfs-site.xml",
+               "Owner": "hdfs:hdfs",
+               "Permissions": "0775",
+               "Content": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c?xml-stylesheet type=\"text/xsl\" href=\"configuration.xsl\"?\u003e\n\u003c!--\n  Licensed under the Apache License, Version 2.0 (the \"License\");\n  you may not use this file except in compliance with the License.\n  You may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\n  Unless required by applicable law or agreed to in writing, software\n  distributed under the License is distributed on an \"AS IS\" BASIS,\n  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n  See the License for the specific language governing permissions and\n  limitations under the License. See accompanying LICENSE file.\n--\u003e\n\n\u003c!-- Put site-specific property overrides in this file. --\u003e\n\n\u003cconfiguration\u003e\n  \u003cproperty\u003e\n    \u003cname\u003edfs.namenode.name.dir\u003c/name\u003e\n    \u003cvalue\u003efile:///var/hdfs/name\u003c/value\u003e\n    \u003cdescription\u003eDetermines where on the local filesystem the DFS name node\n      should store the name table(fsimage).  If this is a comma-delimited list\n      of directories then the name table is replicated in all of the\n      directories, for redundancy. \u003c/description\u003e\n  \u003c/property\u003e\n\n  \u003cproperty\u003e\n    \u003cname\u003edfs.datanode.data.dir\u003c/name\u003e\n    \u003cvalue\u003efile:///var/hdfs/data\u003c/value\u003e\n    \u003cdescription\u003eDetermines where on the local filesystem an DFS data node\n      should store its blocks.  If this is a comma-delimited\n      list of directories, then data will be stored in all named\n      directories, typically on different devices.\n      Directories that do not exist are ignored.\n    \u003c/description\u003e\n  \u003c/property\u003e\n\n  \u003cproperty\u003e\n    \u003cname\u003edfs.namenode.datanode.registration.ip-hostname-check\u003c/name\u003e\n    \u003cvalue\u003efalse\u003c/value\u003e\n    \u003cdescription\u003e\n      If true (the default), then the namenode requires that a connecting\n      datanode's address must be resolved to a hostname.  If necessary, a reverse\n      DNS lookup is performed.  All attempts to register a datanode from an\n      unresolvable address are rejected.\n\n      It is recommended that this setting be left on to prevent accidental\n      registration of datanodes listed by hostname in the excludes file during a\n      DNS outage.  Only set this to false in environments where there is no\n      infrastructure to support reverse DNS lookup.\n    \u003c/description\u003e\n  \u003c/property\u003e\n\n  \u003cproperty\u003e\n    \u003cname\u003edfs.datanode.address\u003c/name\u003e\n    \u003cvalue\u003e0.0.0.0:{{plus 50100 .InstanceID}}\u003c/value\u003e\n    \u003cdescription\u003e\n      The datanode server address and port for data transfer.\n    \u003c/description\u003e\n  \u003c/property\u003e\n\n  \u003cproperty\u003e\n    \u003cname\u003edfs.datanode.ipc.address\u003c/name\u003e\n    \u003cvalue\u003e0.0.0.0:{{plus 50200 .InstanceID}}\u003c/value\u003e\n    \u003cdescription\u003e\n      The datanode ipc server address and port.\n    \u003c/description\u003e\n  \u003c/property\u003e\n\n  \u003cproperty\u003e\n    \u003cname\u003edfs.namenode.checkpoint.dir\u003c/name\u003e\n    \u003cvalue\u003efile:///var/hdfs/secondary\u003c/value\u003e\n    \u003cdescription\u003eDetermines where on the local filesystem the DFS secondary\n      name node should store the temporary images to merge.\n      If this is a comma-delimited list of directories then the image is\n      replicated in all of the directories for redundancy.\n    \u003c/description\u003e\n  \u003c/property\u003e\n\n  \u003cproperty\u003e\n    \u003cname\u003edfs.namenode.checkpoint.period\u003c/name\u003e\n    \u003cvalue\u003e3600\u003c/value\u003e\n    \u003cdescription\u003eThe number of seconds between two periodic checkpoints.\n    \u003c/description\u003e\n  \u003c/property\u003e\n\n  \u003cproperty\u003e\n    \u003cname\u003edfs.namenode.checkpoint.txns\u003c/name\u003e\n    \u003cvalue\u003e1000000\u003c/value\u003e\n    \u003cdescription\u003eThe Secondary NameNode or CheckpointNode will create a checkpoint\n      of the namespace every 'dfs.namenode.checkpoint.txns' transactions, regardless\n      of whether 'dfs.namenode.checkpoint.period' has expired.\n    \u003c/description\u003e\n  \u003c/property\u003e\n\n  \u003cproperty\u003e\n    \u003cname\u003edfs.namenode.checkpoint.check.period\u003c/name\u003e\n    \u003cvalue\u003e60\u003c/value\u003e\n    \u003cdescription\u003eThe SecondaryNameNode and CheckpointNode will poll the NameNode\n      every 'dfs.namenode.checkpoint.check.period' seconds to query the number\n      of uncheckpointed transactions.\n    \u003c/description\u003e\n  \u003c/property\u003e\n\n\u003c/configuration\u003e\n"
+             }
+           },
+           "Context": null,
+           "Endpoints": [
+             {
+               "Name": "hdfs-namenode",
+               "Purpose": "import",
+               "Protocol": "tcp",
+               "PortNumber": 8020,
+               "PortTemplate": "",
+               "VirtualAddress": "",
+               "Application": "hdfs-namenode",
+               "ApplicationTemplate": "",
+               "AddressConfig": {
+                 "Port": 0,
+                 "Protocol": ""
+               },
+               "VHosts": null,
+               "VHostList": null,
+               "PortList": null
+             },
+             {
+               "Name": "hdfs-namenode-rest",
+               "Purpose": "import",
+               "Protocol": "tcp",
+               "PortNumber": 50070,
+               "PortTemplate": "",
+               "VirtualAddress": "",
+               "Application": "hdfs-namenode-rest",
+               "ApplicationTemplate": "",
+               "AddressConfig": {
+                 "Port": 0,
+                 "Protocol": ""
+               },
+               "VHosts": null,
+               "VHostList": null,
+               "PortList": null
+             },
+             {
+               "Name": "hdfs-secondary-namenode",
+               "Purpose": "export",
+               "Protocol": "tcp",
+               "PortNumber": 50090,
+               "PortTemplate": "",
+               "VirtualAddress": "",
+               "Application": "hdfs-secondary-namenode",
+               "ApplicationTemplate": "",
+               "AddressConfig": {
+                 "Port": 0,
+                 "Protocol": ""
+               },
+               "VHosts": null,
+               "VHostList": null,
+               "PortList": null
+             }
+           ],
+           "Services": [],
+           "Tasks": null,
+           "LogFilters": null,
+           "Volumes": [
+             {
+               "Owner": "hdfs:hdfs",
+               "Permission": "0755",
+               "ResourcePath": "hdfs-data-secondary",
+               "ContainerPath": "/var/hdfs/secondary",
+               "Type": "",
+               "InitContainerPath": ""
+             }
+           ],
+           "LogConfigs": [
+             {
+               "Path": "/opt/hadoop/logs/hadoop.log",
+               "Type": "hdfs-secondary-namenode",
+               "Filters": null,
+               "LogTags": null
+             }
+           ],
+           "Snapshot": {
+             "Pause": "",
+             "Resume": ""
+           },
+           "RAMCommitment": "1G",
+           "CPUCommitment": 1,
+           "DisableShell": false,
+           "Runs": null,
+           "Commands": null,
+           "Actions": null,
+           "HealthChecks": {
+             "answering": {
+               "Script": "test $(curl -s -o /dev/null -w '%{http_code}' localhost:50090) = 200",
+               "Timeout": 0,
+               "Interval": 10,
+               "Tolerance": 0
+             }
+           },
+           "Prereqs": [],
+           "MonitoringProfile": {
+             "MetricConfigs": null,
+             "GraphConfigs": null,
+             "ThresholdConfigs": null
+           },
+           "MemoryLimit": 0,
+           "CPUShares": 0,
+           "PIDFile": ""
+         },
+         {
+           "Name": "DataNode",
+           "Title": "",
+           "Version": "",
+           "Command": "/usr/bin/run-hdfs-datanode",
+           "Description": "HDFS dataNode",
+           "Environment": [
+             "HADOOP_ROOT_LOG_LEVEL=INFO",
+             "HADOOP_HEAPSIZE={{bytesToMB .RAMCommitment}}"
+           ],
+           "Tags": [
+             "daemon"
+           ],
+           "ImageID": "zenoss/hdfs:v3",
+           "Instances": {
+             "Min": 3,
+             "Max": 0,
+             "Default": 0
+           },
+           "ChangeOptions": null,
+           "Launch": "auto",
+           "HostPolicy": "",
+           "Hostname": "dn{{.InstanceID}}",
+           "Privileged": true,
+           "ConfigFiles": {
+             "/opt/hadoop/etc/hadoop/README.md": {
+               "Filename": "/opt/hadoop/etc/hadoop/README.md",
+               "Owner": "",
+               "Permissions": "",
+               "Content": "Note: files in this directory are shared by NameNode, DataNode, and SecondaryNameNode services by means of symlinks. \n"
+             },
+             "/opt/hadoop/etc/hadoop/core-site.xml": {
+               "Filename": "/opt/hadoop/etc/hadoop/core-site.xml",
+               "Owner": "hdfs:hdfs",
+               "Permissions": "0775",
+               "Content": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c?xml-stylesheet type=\"text/xsl\" href=\"configuration.xsl\"?\u003e\n\u003c!--\n  Licensed under the Apache License, Version 2.0 (the \"License\");\n  you may not use this file except in compliance with the License.\n  You may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\n  Unless required by applicable law or agreed to in writing, software\n  distributed under the License is distributed on an \"AS IS\" BASIS,\n  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n  See the License for the specific language governing permissions and\n  limitations under the License. See accompanying LICENSE file.\n--\u003e\n\n\u003c!-- Put site-specific property overrides in this file. --\u003e\n\n\u003cconfiguration\u003e\n    \u003cproperty\u003e  \n        \u003cname\u003efs.defaultFS\u003c/name\u003e \n        \u003cvalue\u003ehdfs://0.0.0.0:8020\u003c/value\u003e\n        \u003cdescription\u003eEnter your NameNode hostname\u003c/description\u003e\n    \u003c/property\u003e\n\u003c/configuration\u003e\n"
+             },
+             "/opt/hadoop/etc/hadoop/hadoop-env.sh": {
+               "Filename": "/opt/hadoop/etc/hadoop/hadoop-env.sh",
+               "Owner": "",
+               "Permissions": "",
+               "Content": "# Licensed to the Apache Software Foundation (ASF) under one\n# or more contributor license agreements.  See the NOTICE file\n# distributed with this work for additional information\n# regarding copyright ownership.  The ASF licenses this file\n# to you under the Apache License, Version 2.0 (the\n# \"License\"); you may not use this file except in compliance\n# with the License.  You may obtain a copy of the License at\n#\n#     http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\n# Set Hadoop-specific environment variables here.\n\n# The only required environment variable is JAVA_HOME.  All others are\n# optional.  When running a distributed configuration it is best to\n# set JAVA_HOME in this file, so that it is correctly defined on\n# remote nodes.\n\n# The java implementation to use.\nexport JAVA_HOME=${JAVA_HOME}\n\n# The jsvc implementation to use. Jsvc is required to run secure datanodes.\n#export JSVC_HOME=${JSVC_HOME}\n\nexport HADOOP_CONF_DIR=${HADOOP_CONF_DIR:-\"/etc/hadoop\"}\n\n# Extra Java CLASSPATH elements.  Automatically insert capacity-scheduler.\nfor f in $HADOOP_HOME/contrib/capacity-scheduler/*.jar; do\n  if [ \"$HADOOP_CLASSPATH\" ]; then\n    export HADOOP_CLASSPATH=$HADOOP_CLASSPATH:$f\n  else\n    export HADOOP_CLASSPATH=$f\n  fi\ndone\n\n# The maximum amount of heap to use, in MB. Default is 1000.\n#export HADOOP_HEAPSIZE=\n#export HADOOP_NAMENODE_INIT_HEAPSIZE=\"\"\n\n# Extra Java runtime options.  Empty by default.\nexport HADOOP_OPTS=\"$HADOOP_OPTS -Djava.net.preferIPv4Stack=true\"\n\n# Command specific options appended to HADOOP_OPTS when specified\nexport HADOOP_NAMENODE_OPTS=\"-Dhadoop.security.logger=${HADOOP_SECURITY_LOGGER:-INFO,RFAS} -Dhdfs.audit.logger=${HDFS_AUDIT_LOGGER:-INFO,NullAppender} $HADOOP_NAMENODE_OPTS\"\nexport HADOOP_DATANODE_OPTS=\"-Dhadoop.security.logger=ERROR,RFAS $HADOOP_DATANODE_OPTS\"\n\nexport HADOOP_SECONDARYNAMENODE_OPTS=\"-Dhadoop.security.logger=${HADOOP_SECURITY_LOGGER:-INFO,RFAS} -Dhdfs.audit.logger=${HDFS_AUDIT_LOGGER:-INFO,NullAppender} $HADOOP_SECONDARYNAMENODE_OPTS\"\n\nexport HADOOP_NFS3_OPTS=\"$HADOOP_NFS3_OPTS\"\nexport HADOOP_PORTMAP_OPTS=\"-Xmx512m $HADOOP_PORTMAP_OPTS\"\n\n# The following applies to multiple commands (fs, dfs, fsck, distcp etc)\nexport HADOOP_CLIENT_OPTS=\"-Xmx512m $HADOOP_CLIENT_OPTS\"\n#HADOOP_JAVA_PLATFORM_OPTS=\"-XX:-UsePerfData $HADOOP_JAVA_PLATFORM_OPTS\"\n\n# On secure datanodes, user to run the datanode as after dropping privileges\nexport HADOOP_SECURE_DN_USER=${HADOOP_SECURE_DN_USER}\n\n# Where log files are stored.  $HADOOP_HOME/logs by default.\n#export HADOOP_LOG_DIR=${HADOOP_LOG_DIR}/$USER\n\n# Where log files are stored in the secure data environment.\nexport HADOOP_SECURE_DN_LOG_DIR=${HADOOP_LOG_DIR}/${HADOOP_HDFS_USER}\n\n# The directory where pid files are stored. /tmp by default.\n# NOTE: this should be set to a directory that can only be written to by\n#       the user that will run the hadoop daemons.  Otherwise there is the\n#       potential for a symlink attack.\nexport HADOOP_PID_DIR=${HADOOP_PID_DIR}\nexport HADOOP_SECURE_DN_PID_DIR=${HADOOP_PID_DIR}\n\n# A string representing this instance of hadoop. $USER by default.\nexport HADOOP_IDENT_STRING=$USER\nexport LIBJARS=/opt/hadoop/lib/hdfsMetrics-1.0.jar\nexport HADOOP_CLASSPATH=$HADOOP_CLASSPATH:/opt/hadoop/lib/hdfsMetrics-1.0.jar\n"
+             },
+             "/opt/hadoop/etc/hadoop/hadoop-metrics2.properties": {
+               "Filename": "/opt/hadoop/etc/hadoop/hadoop-metrics2.properties",
+               "Owner": "",
+               "Permissions": "",
+               "Content": "#\n#   Licensed to the Apache Software Foundation (ASF) under one or more\n#   contributor license agreements.  See the NOTICE file distributed with\n#   this work for additional information regarding copyright ownership.\n#   The ASF licenses this file to You under the Apache License, Version 2.0\n#   (the \"License\"); you may not use this file except in compliance with\n#   the License.  You may obtain a copy of the License at\n#\n#       http://www.apache.org/licenses/LICENSE-2.0\n#\n#   Unless required by applicable law or agreed to in writing, software\n#   distributed under the License is distributed on an \"AS IS\" BASIS,\n#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n#   See the License for the specific language governing permissions and\n#   limitations under the License.\n#\n\n# syntax: [prefix].[source|sink].[instance].[options]\n# See javadoc of package-info.java for org.apache.hadoop.metrics2 for details\n\n#namnode.sink.file.class=org.apache.hadoop.metrics2.sink.FileSink\ndatanode.sink.file.class=com.zenoss.hadoop.metrics.ControlCenterSink\ndatanode.sink.file.include=dfs\ndatanode.sink.file.include=rpc*\ndatanode.sink.file.includedMetrics=\\\\w*AvgTime,Block\\\\w*\n# default sampling period, in seconds\n*.period=10\n#namenode.sink.file.filename=/opt/hadoop/logs/metrics.out\n\n# The namenode-metrics.out will contain metrics from all context\n#namenode.sink.file.filename=namenode-metrics.out\n# Specifying a special sampling period for namenode:\n#namenode.sink.*.period=8\n\n#datanode.sink.file.filename=datanode-metrics.out\n\n# the following example split metrics of different\n# context to different sinks (in this case files)\n#jobtracker.sink.file_jvm.context=jvm\n#jobtracker.sink.file_jvm.filename=jobtracker-jvm-metrics.out\n#jobtracker.sink.file_mapred.context=mapred\n#jobtracker.sink.file_mapred.filename=jobtracker-mapred-metrics.out\n\n#tasktracker.sink.file.filename=tasktracker-metrics.out\n\n#maptask.sink.file.filename=maptask-metrics.out\n\n#reducetask.sink.file.filename=reducetask-metrics.out\n\n\n#Configure control center sink\n#namenode.sink.controlCenter.class=com.zenoss.hadoop.metrics.ControlCenterSink\n#*.sink.controlCenter.class=com.zenoss.hadoop.metrics.ControlCenterSink\n"
+             },
+             "/opt/hadoop/etc/hadoop/hdfs-site.xml": {
+               "Filename": "/opt/hadoop/etc/hadoop/hdfs-site.xml",
+               "Owner": "hdfs:hdfs",
+               "Permissions": "0775",
+               "Content": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c?xml-stylesheet type=\"text/xsl\" href=\"configuration.xsl\"?\u003e\n\u003c!--\n  Licensed under the Apache License, Version 2.0 (the \"License\");\n  you may not use this file except in compliance with the License.\n  You may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\n  Unless required by applicable law or agreed to in writing, software\n  distributed under the License is distributed on an \"AS IS\" BASIS,\n  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n  See the License for the specific language governing permissions and\n  limitations under the License. See accompanying LICENSE file.\n--\u003e\n\n\u003c!-- Put site-specific property overrides in this file. --\u003e\n\n\u003cconfiguration\u003e\n  \u003cproperty\u003e\n    \u003cname\u003edfs.namenode.name.dir\u003c/name\u003e\n    \u003cvalue\u003efile:///var/hdfs/name\u003c/value\u003e\n    \u003cdescription\u003eDetermines where on the local filesystem the DFS name node\n      should store the name table(fsimage).  If this is a comma-delimited list\n      of directories then the name table is replicated in all of the\n      directories, for redundancy. \u003c/description\u003e\n  \u003c/property\u003e\n\n  \u003cproperty\u003e\n    \u003cname\u003edfs.datanode.data.dir\u003c/name\u003e\n    \u003cvalue\u003efile:///var/hdfs/data\u003c/value\u003e\n    \u003cdescription\u003eDetermines where on the local filesystem an DFS data node\n      should store its blocks.  If this is a comma-delimited\n      list of directories, then data will be stored in all named\n      directories, typically on different devices.\n      Directories that do not exist are ignored.\n    \u003c/description\u003e\n  \u003c/property\u003e\n\n  \u003cproperty\u003e\n    \u003cname\u003edfs.namenode.datanode.registration.ip-hostname-check\u003c/name\u003e\n    \u003cvalue\u003efalse\u003c/value\u003e\n    \u003cdescription\u003e\n      If true (the default), then the namenode requires that a connecting\n      datanode's address must be resolved to a hostname.  If necessary, a reverse\n      DNS lookup is performed.  All attempts to register a datanode from an\n      unresolvable address are rejected.\n\n      It is recommended that this setting be left on to prevent accidental\n      registration of datanodes listed by hostname in the excludes file during a\n      DNS outage.  Only set this to false in environments where there is no\n      infrastructure to support reverse DNS lookup.\n    \u003c/description\u003e\n  \u003c/property\u003e\n\n  \u003cproperty\u003e\n    \u003cname\u003edfs.datanode.address\u003c/name\u003e\n    \u003cvalue\u003e0.0.0.0:{{plus 50100 .InstanceID}}\u003c/value\u003e\n    \u003cdescription\u003e\n      The datanode server address and port for data transfer.\n    \u003c/description\u003e\n  \u003c/property\u003e\n\n  \u003cproperty\u003e\n    \u003cname\u003edfs.datanode.ipc.address\u003c/name\u003e\n    \u003cvalue\u003e0.0.0.0:{{plus 50200 .InstanceID}}\u003c/value\u003e\n    \u003cdescription\u003e\n      The datanode ipc server address and port.\n    \u003c/description\u003e\n  \u003c/property\u003e\n\n  \u003cproperty\u003e\n    \u003cname\u003edfs.namenode.checkpoint.dir\u003c/name\u003e\n    \u003cvalue\u003efile:///var/hdfs/secondary\u003c/value\u003e\n    \u003cdescription\u003eDetermines where on the local filesystem the DFS secondary\n      name node should store the temporary images to merge.\n      If this is a comma-delimited list of directories then the image is\n      replicated in all of the directories for redundancy.\n    \u003c/description\u003e\n  \u003c/property\u003e\n\n  \u003cproperty\u003e\n    \u003cname\u003edfs.namenode.checkpoint.period\u003c/name\u003e\n    \u003cvalue\u003e3600\u003c/value\u003e\n    \u003cdescription\u003eThe number of seconds between two periodic checkpoints.\n    \u003c/description\u003e\n  \u003c/property\u003e\n\n  \u003cproperty\u003e\n    \u003cname\u003edfs.namenode.checkpoint.txns\u003c/name\u003e\n    \u003cvalue\u003e1000000\u003c/value\u003e\n    \u003cdescription\u003eThe Secondary NameNode or CheckpointNode will create a checkpoint\n      of the namespace every 'dfs.namenode.checkpoint.txns' transactions, regardless\n      of whether 'dfs.namenode.checkpoint.period' has expired.\n    \u003c/description\u003e\n  \u003c/property\u003e\n\n  \u003cproperty\u003e\n    \u003cname\u003edfs.namenode.checkpoint.check.period\u003c/name\u003e\n    \u003cvalue\u003e60\u003c/value\u003e\n    \u003cdescription\u003eThe SecondaryNameNode and CheckpointNode will poll the NameNode\n      every 'dfs.namenode.checkpoint.check.period' seconds to query the number\n      of uncheckpointed transactions.\n    \u003c/description\u003e\n  \u003c/property\u003e\n\n\u003c/configuration\u003e\n"
+             }
+           },
+           "Context": null,
+           "Endpoints": [
+             {
+               "Name": "hdfs-namenode",
+               "Purpose": "import",
+               "Protocol": "tcp",
+               "PortNumber": 8020,
+               "PortTemplate": "",
+               "VirtualAddress": "",
+               "Application": "hdfs-namenode",
+               "ApplicationTemplate": "",
+               "AddressConfig": {
+                 "Port": 0,
+                 "Protocol": ""
+               },
+               "VHosts": null,
+               "VHostList": null,
+               "PortList": null
+             },
+             {
+               "Name": "hdfs-datanode",
+               "Purpose": "export",
+               "Protocol": "tcp",
+               "PortNumber": 50100,
+               "PortTemplate": "{{ plus 50100 .InstanceID }}",
+               "VirtualAddress": "",
+               "Application": "hdfs-datanode",
+               "ApplicationTemplate": "",
+               "AddressConfig": {
+                 "Port": 0,
+                 "Protocol": ""
+               },
+               "VHosts": null,
+               "VHostList": null,
+               "PortList": null
+             },
+             {
+               "Name": "hdfs-datanode-ipc",
+               "Purpose": "export",
+               "Protocol": "tcp",
+               "PortNumber": 50200,
+               "PortTemplate": "{{ plus 50200 .InstanceID }}",
+               "VirtualAddress": "",
+               "Application": "hdfs-datanode-ipc",
+               "ApplicationTemplate": "",
+               "AddressConfig": {
+                 "Port": 0,
+                 "Protocol": ""
+               },
+               "VHosts": null,
+               "VHostList": null,
+               "PortList": null
+             }
+           ],
+           "Services": [],
+           "Tasks": null,
+           "LogFilters": null,
+           "Volumes": [
+             {
+               "Owner": "hdfs:hdfs",
+               "Permission": "0755",
+               "ResourcePath": "hdfs-data-{{.InstanceID}}",
+               "ContainerPath": "/var/hdfs/data",
+               "Type": "",
+               "InitContainerPath": ""
+             }
+           ],
+           "LogConfigs": [
+             {
+               "Path": "/opt/hadoop/logs/hadoop.log",
+               "Type": "hdfs-datanode",
+               "Filters": null,
+               "LogTags": null
+             }
+           ],
+           "Snapshot": {
+             "Pause": "",
+             "Resume": ""
+           },
+           "RAMCommitment": "1G",
+           "CPUCommitment": 1,
+           "DisableShell": false,
+           "Runs": null,
+           "Commands": null,
+           "Actions": null,
+           "HealthChecks": {
+             "answering": {
+               "Script": "test $(curl -s -o /dev/null -w '%{http_code}' localhost:50075) = 200",
+               "Timeout": 0,
+               "Interval": 10,
+               "Tolerance": 0
+             }
+           },
+           "Prereqs": [],
+           "MonitoringProfile": {
+             "MetricConfigs": null,
+             "GraphConfigs": [
+               {
+                 "id": "TimeStats",
+                 "name": "Node Performance",
+                 "footer": false,
+                 "format": "",
+                 "returnset": "EXACT",
+                 "type": "line",
+                 "tags": null,
+                 "miny": null,
+                 "maxy": null,
+                 "yAxisLabel": "Milliseconds",
+                 "description": "Block Stats",
+                 "range": {
+                   "start": "",
+                   "end": "0s-ago"
+                 },
+                 "datapoints": [
+                   {
+                     "aggregator": "zimsum",
+                     "color": "",
+                     "expression": "",
+                     "fill": false,
+                     "format": "",
+                     "legend": "Average Block Read Rate Time",
+                     "metric": "ReadBlockOpAvgTime",
+                     "metricSource": "",
+                     "id": "ReadBlockOpAvgTime",
+                     "name": "ReadBlockOpAvgTime",
+                     "rate": true,
+                     "rateOptions": {
+                       "counter": true,
+                       "counterMax": null,
+                       "resetThreshold": 1048576
+                     },
+                     "type": "line"
+                   },
+                   {
+                     "aggregator": "zimsum",
+                     "color": "",
+                     "expression": "",
+                     "fill": false,
+                     "format": "",
+                     "legend": "Average Heart Rate Time",
+                     "metric": "HeartbeatsAvgTime",
+                     "metricSource": "",
+                     "id": "HeartbeatsAvgTime",
+                     "name": "HeartbeatsAvgTime",
+                     "rate": true,
+                     "rateOptions": {
+                       "counter": true,
+                       "counterMax": null,
+                       "resetThreshold": 1048576
+                     },
+                     "type": "line"
+                   },
+                   {
+                     "aggregator": "zimsum",
+                     "color": "",
+                     "expression": "",
+                     "fill": false,
+                     "format": "",
+                     "legend": "Block Report Average Time",
+                     "metric": "BlockReportsAvgTime",
+                     "metricSource": "",
+                     "id": "BlockReportsAvgTime",
+                     "name": "BlockReportsAvgTime",
+                     "rate": true,
+                     "rateOptions": {
+                       "counter": true,
+                       "counterMax": null,
+                       "resetThreshold": 1048576
+                     },
+                     "type": "line"
+                   }
+                 ],
+                 "builtin": false,
+                 "units": "",
+                 "base": 0
+               },
+               {
+                 "id": "BlockStats",
+                 "name": "Block Stats",
+                 "footer": false,
+                 "format": "",
+                 "returnset": "EXACT",
+                 "type": "line",
+                 "tags": null,
+                 "miny": null,
+                 "maxy": null,
+                 "yAxisLabel": "Blocks",
+                 "description": "Block Stats",
+                 "range": {
+                   "start": "",
+                   "end": "0s-ago"
+                 },
+                 "datapoints": [
+                   {
+                     "aggregator": "zimsum",
+                     "color": "",
+                     "expression": "",
+                     "fill": false,
+                     "format": "",
+                     "legend": "Blocks Written",
+                     "metric": "BlocksWritten",
+                     "metricSource": "",
+                     "id": "BlocksWritten",
+                     "name": "BlocksWritten",
+                     "rate": true,
+                     "rateOptions": {
+                       "counter": true,
+                       "counterMax": null,
+                       "resetThreshold": 1048576
+                     },
+                     "type": "line"
+                   },
+                   {
+                     "aggregator": "zimsum",
+                     "color": "",
+                     "expression": "",
+                     "fill": false,
+                     "format": "",
+                     "legend": "Blocks Read",
+                     "metric": "BlocksRead",
+                     "metricSource": "",
+                     "id": "BlocksRead",
+                     "name": "BlocksRead",
+                     "rate": true,
+                     "rateOptions": {
+                       "counter": true,
+                       "counterMax": null,
+                       "resetThreshold": 1048576
+                     },
+                     "type": "line"
+                   },
+                   {
+                     "aggregator": "zimsum",
+                     "color": "",
+                     "expression": "",
+                     "fill": false,
+                     "format": "",
+                     "legend": "Blocks Replicated",
+                     "metric": "BlocksReplicated",
+                     "metricSource": "",
+                     "id": "BlocksReplicated",
+                     "name": "BlocksReplicated",
+                     "rate": true,
+                     "rateOptions": {
+                       "counter": true,
+                       "counterMax": null,
+                       "resetThreshold": 1048576
+                     },
+                     "type": "line"
+                   },
+                   {
+                     "aggregator": "zimsum",
+                     "color": "",
+                     "expression": "",
+                     "fill": false,
+                     "format": "",
+                     "legend": "Blocks Removed",
+                     "metric": "BlocksRemoved",
+                     "metricSource": "",
+                     "id": "BlocksRemoved",
+                     "name": "BlocksRemoved",
+                     "rate": true,
+                     "rateOptions": {
+                       "counter": true,
+                       "counterMax": null,
+                       "resetThreshold": 1048576
+                     },
+                     "type": "line"
+                   }
+                 ],
+                 "builtin": false,
+                 "units": "",
+                 "base": 0
+               }
+             ],
+             "ThresholdConfigs": null
+           },
+           "MemoryLimit": 0,
+           "CPUShares": 0,
+           "PIDFile": ""
+         },
+         {
+           "Name": "NameNode",
+           "Title": "",
+           "Version": "",
+           "Command": "/usr/bin/run-hdfs-namenode",
+           "Description": "HDFS nameNode",
+           "Environment": [
+             "HADOOP_ROOT_LOG_LEVEL=INFO",
+             "HADOOP_HEAPSIZE={{bytesToMB .RAMCommitment}}"
+           ],
+           "Tags": [
+             "daemon"
+           ],
+           "ImageID": "zenoss/hdfs:v3",
+           "Instances": {
+             "Min": 1,
+             "Max": 1,
+             "Default": 0
+           },
+           "ChangeOptions": null,
+           "Launch": "auto",
+           "HostPolicy": "",
+           "Hostname": "localhost",
+           "Privileged": true,
+           "ConfigFiles": {
+             "/opt/hadoop/etc/hadoop/README.md": {
+               "Filename": "/opt/hadoop/etc/hadoop/README.md",
+               "Owner": "",
+               "Permissions": "",
+               "Content": "Note: files in this directory are shared by NameNode, DataNode, and SecondaryNameNode services by means of symlinks. \n"
+             },
+             "/opt/hadoop/etc/hadoop/core-site.xml": {
+               "Filename": "/opt/hadoop/etc/hadoop/core-site.xml",
+               "Owner": "hdfs:hdfs",
+               "Permissions": "0775",
+               "Content": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c?xml-stylesheet type=\"text/xsl\" href=\"configuration.xsl\"?\u003e\n\u003c!--\n  Licensed under the Apache License, Version 2.0 (the \"License\");\n  you may not use this file except in compliance with the License.\n  You may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\n  Unless required by applicable law or agreed to in writing, software\n  distributed under the License is distributed on an \"AS IS\" BASIS,\n  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n  See the License for the specific language governing permissions and\n  limitations under the License. See accompanying LICENSE file.\n--\u003e\n\n\u003c!-- Put site-specific property overrides in this file. --\u003e\n\n\u003cconfiguration\u003e\n    \u003cproperty\u003e  \n        \u003cname\u003efs.defaultFS\u003c/name\u003e \n        \u003cvalue\u003ehdfs://0.0.0.0:8020\u003c/value\u003e\n        \u003cdescription\u003eEnter your NameNode hostname\u003c/description\u003e\n    \u003c/property\u003e\n\u003c/configuration\u003e\n"
+             },
+             "/opt/hadoop/etc/hadoop/hadoop-env.sh": {
+               "Filename": "/opt/hadoop/etc/hadoop/hadoop-env.sh",
+               "Owner": "",
+               "Permissions": "",
+               "Content": "# Licensed to the Apache Software Foundation (ASF) under one\n# or more contributor license agreements.  See the NOTICE file\n# distributed with this work for additional information\n# regarding copyright ownership.  The ASF licenses this file\n# to you under the Apache License, Version 2.0 (the\n# \"License\"); you may not use this file except in compliance\n# with the License.  You may obtain a copy of the License at\n#\n#     http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\n# Set Hadoop-specific environment variables here.\n\n# The only required environment variable is JAVA_HOME.  All others are\n# optional.  When running a distributed configuration it is best to\n# set JAVA_HOME in this file, so that it is correctly defined on\n# remote nodes.\n\n# The java implementation to use.\nexport JAVA_HOME=${JAVA_HOME}\n\n# The jsvc implementation to use. Jsvc is required to run secure datanodes.\n#export JSVC_HOME=${JSVC_HOME}\n\nexport HADOOP_CONF_DIR=${HADOOP_CONF_DIR:-\"/etc/hadoop\"}\n\n# Extra Java CLASSPATH elements.  Automatically insert capacity-scheduler.\nfor f in $HADOOP_HOME/contrib/capacity-scheduler/*.jar; do\n  if [ \"$HADOOP_CLASSPATH\" ]; then\n    export HADOOP_CLASSPATH=$HADOOP_CLASSPATH:$f\n  else\n    export HADOOP_CLASSPATH=$f\n  fi\ndone\n\n# The maximum amount of heap to use, in MB. Default is 1000.\n#export HADOOP_HEAPSIZE=\n#export HADOOP_NAMENODE_INIT_HEAPSIZE=\"\"\n\n# Extra Java runtime options.  Empty by default.\nexport HADOOP_OPTS=\"$HADOOP_OPTS -Djava.net.preferIPv4Stack=true\"\n\n# Command specific options appended to HADOOP_OPTS when specified\nexport HADOOP_NAMENODE_OPTS=\"-Dhadoop.security.logger=${HADOOP_SECURITY_LOGGER:-INFO,RFAS} -Dhdfs.audit.logger=${HDFS_AUDIT_LOGGER:-INFO,NullAppender} $HADOOP_NAMENODE_OPTS\"\nexport HADOOP_DATANODE_OPTS=\"-Dhadoop.security.logger=ERROR,RFAS $HADOOP_DATANODE_OPTS\"\n\nexport HADOOP_SECONDARYNAMENODE_OPTS=\"-Dhadoop.security.logger=${HADOOP_SECURITY_LOGGER:-INFO,RFAS} -Dhdfs.audit.logger=${HDFS_AUDIT_LOGGER:-INFO,NullAppender} $HADOOP_SECONDARYNAMENODE_OPTS\"\n\nexport HADOOP_NFS3_OPTS=\"$HADOOP_NFS3_OPTS\"\nexport HADOOP_PORTMAP_OPTS=\"-Xmx512m $HADOOP_PORTMAP_OPTS\"\n\n# The following applies to multiple commands (fs, dfs, fsck, distcp etc)\nexport HADOOP_CLIENT_OPTS=\"-Xmx512m $HADOOP_CLIENT_OPTS\"\n#HADOOP_JAVA_PLATFORM_OPTS=\"-XX:-UsePerfData $HADOOP_JAVA_PLATFORM_OPTS\"\n\n# On secure datanodes, user to run the datanode as after dropping privileges\nexport HADOOP_SECURE_DN_USER=${HADOOP_SECURE_DN_USER}\n\n# Where log files are stored.  $HADOOP_HOME/logs by default.\n#export HADOOP_LOG_DIR=${HADOOP_LOG_DIR}/$USER\n\n# Where log files are stored in the secure data environment.\nexport HADOOP_SECURE_DN_LOG_DIR=${HADOOP_LOG_DIR}/${HADOOP_HDFS_USER}\n\n# The directory where pid files are stored. /tmp by default.\n# NOTE: this should be set to a directory that can only be written to by\n#       the user that will run the hadoop daemons.  Otherwise there is the\n#       potential for a symlink attack.\nexport HADOOP_PID_DIR=${HADOOP_PID_DIR}\nexport HADOOP_SECURE_DN_PID_DIR=${HADOOP_PID_DIR}\n\n# A string representing this instance of hadoop. $USER by default.\nexport HADOOP_IDENT_STRING=$USER\nexport LIBJARS=/opt/hadoop/lib/hdfsMetrics-1.0.jar\nexport HADOOP_CLASSPATH=$HADOOP_CLASSPATH:/opt/hadoop/lib/hdfsMetrics-1.0.jar\n"
+             },
+             "/opt/hadoop/etc/hadoop/hadoop-metrics2.properties": {
+               "Filename": "/opt/hadoop/etc/hadoop/hadoop-metrics2.properties",
+               "Owner": "",
+               "Permissions": "",
+               "Content": "#\n#   Licensed to the Apache Software Foundation (ASF) under one or more\n#   contributor license agreements.  See the NOTICE file distributed with\n#   this work for additional information regarding copyright ownership.\n#   The ASF licenses this file to You under the Apache License, Version 2.0\n#   (the \"License\"); you may not use this file except in compliance with\n#   the License.  You may obtain a copy of the License at\n#\n#       http://www.apache.org/licenses/LICENSE-2.0\n#\n#   Unless required by applicable law or agreed to in writing, software\n#   distributed under the License is distributed on an \"AS IS\" BASIS,\n#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n#   See the License for the specific language governing permissions and\n#   limitations under the License.\n#\n\n# syntax: [prefix].[source|sink].[instance].[options]\n# See javadoc of package-info.java for org.apache.hadoop.metrics2 for details\n\n#namnode.sink.file.class=org.apache.hadoop.metrics2.sink.FileSink\nnamenode.sink.file.class=com.zenoss.hadoop.metrics.ControlCenterSink\nnamenode.sink.file.include=dfs\nnamenode.sink.file.include=rpc*\n# default sampling period, in seconds\n*.period=10\n\nnamenode.sink.file.host=http://localhost:22350\nnamenode.sink.file.includedMetrics=Capacity\\\\w*,\\\\w*Block\\\\w*,RpcProcessingTimeNumOps,\\\\w*AvgTime\n\n\n\n#namenode.sink.file.filename=/opt/hadoop/logs/metrics.out\n\n# The namenode-metrics.out will contain metrics from all context\n#namenode.sink.file.filename=namenode-metrics.out\n# Specifying a special sampling period for namenode:\n#namenode.sink.*.period=8\n\n#datanode.sink.file.filename=datanode-metrics.out\n\n# the following example split metrics of different\n# context to different sinks (in this case files)\n#jobtracker.sink.file_jvm.context=jvm\n#jobtracker.sink.file_jvm.filename=jobtracker-jvm-metrics.out\n#jobtracker.sink.file_mapred.context=mapred\n#jobtracker.sink.file_mapred.filename=jobtracker-mapred-metrics.out\n\n#tasktracker.sink.file.filename=tasktracker-metrics.out\n\n#maptask.sink.file.filename=maptask-metrics.out\n\n#reducetask.sink.file.filename=reducetask-metrics.out\n\n\n#Configure control center sink\n#namenode.sink.controlCenter.class=com.zenoss.hadoop.metrics.ControlCenterSink\n#*.sink.controlCenter.class=com.zenoss.hadoop.metrics.ControlCenterSink\n"
+             },
+             "/opt/hadoop/etc/hadoop/hdfs-site.xml": {
+               "Filename": "/opt/hadoop/etc/hadoop/hdfs-site.xml",
+               "Owner": "hdfs:hdfs",
+               "Permissions": "0775",
+               "Content": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c?xml-stylesheet type=\"text/xsl\" href=\"configuration.xsl\"?\u003e\n\u003c!--\n  Licensed under the Apache License, Version 2.0 (the \"License\");\n  you may not use this file except in compliance with the License.\n  You may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\n  Unless required by applicable law or agreed to in writing, software\n  distributed under the License is distributed on an \"AS IS\" BASIS,\n  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n  See the License for the specific language governing permissions and\n  limitations under the License. See accompanying LICENSE file.\n--\u003e\n\n\u003c!-- Put site-specific property overrides in this file. --\u003e\n\n\u003cconfiguration\u003e\n  \u003cproperty\u003e\n    \u003cname\u003edfs.namenode.name.dir\u003c/name\u003e\n    \u003cvalue\u003efile:///var/hdfs/name\u003c/value\u003e\n    \u003cdescription\u003eDetermines where on the local filesystem the DFS name node\n      should store the name table(fsimage).  If this is a comma-delimited list\n      of directories then the name table is replicated in all of the\n      directories, for redundancy. \u003c/description\u003e\n  \u003c/property\u003e\n\n  \u003cproperty\u003e\n    \u003cname\u003edfs.datanode.data.dir\u003c/name\u003e\n    \u003cvalue\u003efile:///var/hdfs/data\u003c/value\u003e\n    \u003cdescription\u003eDetermines where on the local filesystem an DFS data node\n      should store its blocks.  If this is a comma-delimited\n      list of directories, then data will be stored in all named\n      directories, typically on different devices.\n      Directories that do not exist are ignored.\n    \u003c/description\u003e\n  \u003c/property\u003e\n\n  \u003cproperty\u003e\n    \u003cname\u003edfs.namenode.datanode.registration.ip-hostname-check\u003c/name\u003e\n    \u003cvalue\u003efalse\u003c/value\u003e\n    \u003cdescription\u003e\n      If true (the default), then the namenode requires that a connecting\n      datanode's address must be resolved to a hostname.  If necessary, a reverse\n      DNS lookup is performed.  All attempts to register a datanode from an\n      unresolvable address are rejected.\n\n      It is recommended that this setting be left on to prevent accidental\n      registration of datanodes listed by hostname in the excludes file during a\n      DNS outage.  Only set this to false in environments where there is no\n      infrastructure to support reverse DNS lookup.\n    \u003c/description\u003e\n  \u003c/property\u003e\n\n  \u003cproperty\u003e\n    \u003cname\u003edfs.datanode.address\u003c/name\u003e\n    \u003cvalue\u003e0.0.0.0:{{plus 50100 .InstanceID}}\u003c/value\u003e\n    \u003cdescription\u003e\n      The datanode server address and port for data transfer.\n    \u003c/description\u003e\n  \u003c/property\u003e\n\n  \u003cproperty\u003e\n    \u003cname\u003edfs.datanode.ipc.address\u003c/name\u003e\n    \u003cvalue\u003e0.0.0.0:{{plus 50200 .InstanceID}}\u003c/value\u003e\n    \u003cdescription\u003e\n      The datanode ipc server address and port.\n    \u003c/description\u003e\n  \u003c/property\u003e\n\n  \u003cproperty\u003e\n    \u003cname\u003edfs.namenode.checkpoint.dir\u003c/name\u003e\n    \u003cvalue\u003efile:///var/hdfs/secondary\u003c/value\u003e\n    \u003cdescription\u003eDetermines where on the local filesystem the DFS secondary\n      name node should store the temporary images to merge.\n      If this is a comma-delimited list of directories then the image is\n      replicated in all of the directories for redundancy.\n    \u003c/description\u003e\n  \u003c/property\u003e\n\n  \u003cproperty\u003e\n    \u003cname\u003edfs.namenode.checkpoint.period\u003c/name\u003e\n    \u003cvalue\u003e3600\u003c/value\u003e\n    \u003cdescription\u003eThe number of seconds between two periodic checkpoints.\n    \u003c/description\u003e\n  \u003c/property\u003e\n\n  \u003cproperty\u003e\n    \u003cname\u003edfs.namenode.checkpoint.txns\u003c/name\u003e\n    \u003cvalue\u003e1000000\u003c/value\u003e\n    \u003cdescription\u003eThe Secondary NameNode or CheckpointNode will create a checkpoint\n      of the namespace every 'dfs.namenode.checkpoint.txns' transactions, regardless\n      of whether 'dfs.namenode.checkpoint.period' has expired.\n    \u003c/description\u003e\n  \u003c/property\u003e\n\n  \u003cproperty\u003e\n    \u003cname\u003edfs.namenode.checkpoint.check.period\u003c/name\u003e\n    \u003cvalue\u003e60\u003c/value\u003e\n    \u003cdescription\u003eThe SecondaryNameNode and CheckpointNode will poll the NameNode\n      every 'dfs.namenode.checkpoint.check.period' seconds to query the number\n      of uncheckpointed transactions.\n    \u003c/description\u003e\n  \u003c/property\u003e\n\n\u003c/configuration\u003e\n"
+             }
+           },
+           "Context": null,
+           "Endpoints": [
+             {
+               "Name": "hdfs-namenode",
+               "Purpose": "export",
+               "Protocol": "tcp",
+               "PortNumber": 8020,
+               "PortTemplate": "",
+               "VirtualAddress": "",
+               "Application": "hdfs-namenode",
+               "ApplicationTemplate": "",
+               "AddressConfig": {
+                 "Port": 0,
+                 "Protocol": ""
+               },
+               "VHosts": null,
+               "VHostList": null,
+               "PortList": null
+             },
+             {
+               "Name": "hdfs-namenode-rest",
+               "Purpose": "export",
+               "Protocol": "tcp",
+               "PortNumber": 50070,
+               "PortTemplate": "",
+               "VirtualAddress": "",
+               "Application": "hdfs-namenode-rest",
+               "ApplicationTemplate": "",
+               "AddressConfig": {
+                 "Port": 0,
+                 "Protocol": ""
+               },
+               "VHosts": null,
+               "VHostList": [
+                 {
+                   "Name": "hdfs",
+                   "Enabled": false
+                 }
+               ],
+               "PortList": null
+             },
+             {
+               "Name": "hdfs-datanode",
+               "Purpose": "import_all",
+               "Protocol": "tcp",
+               "PortNumber": 50100,
+               "PortTemplate": "",
+               "VirtualAddress": "",
+               "Application": "hdfs-datanode",
+               "ApplicationTemplate": "",
+               "AddressConfig": {
+                 "Port": 0,
+                 "Protocol": ""
+               },
+               "VHosts": null,
+               "VHostList": null,
+               "PortList": null
+             },
+             {
+               "Name": "hdfs-datanode-ipc",
+               "Purpose": "import_all",
+               "Protocol": "tcp",
+               "PortNumber": 50200,
+               "PortTemplate": "",
+               "VirtualAddress": "",
+               "Application": "hdfs-datanode-ipc",
+               "ApplicationTemplate": "",
+               "AddressConfig": {
+                 "Port": 0,
+                 "Protocol": ""
+               },
+               "VHosts": null,
+               "VHostList": null,
+               "PortList": null
+             }
+           ],
+           "Services": [],
+           "Tasks": null,
+           "LogFilters": null,
+           "Volumes": [
+             {
+               "Owner": "hdfs:hdfs",
+               "Permission": "0755",
+               "ResourcePath": "hdfs-name",
+               "ContainerPath": "/var/hdfs/name",
+               "Type": "",
+               "InitContainerPath": ""
+             }
+           ],
+           "LogConfigs": [
+             {
+               "Path": "/opt/hadoop/logs/hadoop.log",
+               "Type": "hdfs-namenode",
+               "Filters": null,
+               "LogTags": null
+             }
+           ],
+           "Snapshot": {
+             "Pause": "",
+             "Resume": ""
+           },
+           "RAMCommitment": "1G",
+           "CPUCommitment": 1,
+           "DisableShell": false,
+           "Runs": null,
+           "Commands": null,
+           "Actions": null,
+           "HealthChecks": {
+             "answering": {
+               "Script": "test $(curl -s -o /dev/null -w '%{http_code}' localhost:50070) = 200",
+               "Timeout": 0,
+               "Interval": 10,
+               "Tolerance": 0
+             }
+           },
+           "Prereqs": [],
+           "MonitoringProfile": {
+             "MetricConfigs": null,
+             "GraphConfigs": [
+               {
+                 "id": "FreeDfsSpace",
+                 "name": "Total DFS Space",
+                 "footer": false,
+                 "format": "",
+                 "returnset": "EXACT",
+                 "type": "line",
+                 "tags": null,
+                 "miny": null,
+                 "maxy": null,
+                 "yAxisLabel": "GB",
+                 "description": "DFS Space",
+                 "range": {
+                   "start": "",
+                   "end": "0s-ago"
+                 },
+                 "datapoints": [
+                   {
+                     "aggregator": "zimsum",
+                     "color": "",
+                     "expression": "",
+                     "fill": true,
+                     "format": "",
+                     "legend": "Total Capacity",
+                     "metric": "CapacityTotalGB",
+                     "metricSource": "",
+                     "id": "CapacityTotalGB",
+                     "name": "Total Capacity",
+                     "rate": false,
+                     "rateOptions": null,
+                     "type": "line"
+                   },
+                   {
+                     "aggregator": "zimsum",
+                     "color": "",
+                     "expression": "",
+                     "fill": true,
+                     "format": "",
+                     "legend": "Used Capacity",
+                     "metric": "CapacityUsedGB",
+                     "metricSource": "",
+                     "id": "CapacityUsedGB",
+                     "name": "Used Capacity",
+                     "rate": false,
+                     "rateOptions": null,
+                     "type": "line"
+                   }
+                 ],
+                 "builtin": false,
+                 "units": "",
+                 "base": 0
+               },
+               {
+                 "id": "blockData",
+                 "name": "DFS Blocks",
+                 "footer": false,
+                 "format": "",
+                 "returnset": "EXACT",
+                 "type": "line",
+                 "tags": null,
+                 "miny": null,
+                 "maxy": null,
+                 "yAxisLabel": "Bocks",
+                 "description": "Information about Blocks",
+                 "range": {
+                   "start": "",
+                   "end": "0s-ago"
+                 },
+                 "datapoints": [
+                   {
+                     "aggregator": "zimsum",
+                     "color": "",
+                     "expression": "",
+                     "fill": true,
+                     "format": "",
+                     "legend": "Allocated Blocks",
+                     "metric": "BlocksTotal",
+                     "metricSource": "",
+                     "id": "BlocksTotal",
+                     "name": "Total Blocks",
+                     "rate": false,
+                     "rateOptions": null,
+                     "type": "line"
+                   },
+                   {
+                     "aggregator": "zimsum",
+                     "color": "",
+                     "expression": "",
+                     "fill": true,
+                     "format": "",
+                     "legend": "Pending Replication Blocks",
+                     "metric": "PendingReplicationBlocks",
+                     "metricSource": "",
+                     "id": "PendingReplicationBlocks",
+                     "name": "Pending Replication Blocks",
+                     "rate": false,
+                     "rateOptions": null,
+                     "type": "line"
+                   },
+                   {
+                     "aggregator": "zimsum",
+                     "color": "",
+                     "expression": "",
+                     "fill": true,
+                     "format": "",
+                     "legend": "Corrupt Blocks",
+                     "metric": "CorruptBlocks",
+                     "metricSource": "",
+                     "id": "CorruptBlocks",
+                     "name": "Corrupt Blocks",
+                     "rate": false,
+                     "rateOptions": null,
+                     "type": "line"
+                   },
+                   {
+                     "aggregator": "zimsum",
+                     "color": "",
+                     "expression": "",
+                     "fill": true,
+                     "format": "",
+                     "legend": "Pending Deletion Blocks",
+                     "metric": "PendingDeletionBlocks",
+                     "metricSource": "",
+                     "id": "PendingDeletionBlocks",
+                     "name": "Pending Deletion Blocks",
+                     "rate": false,
+                     "rateOptions": null,
+                     "type": "line"
+                   },
+                   {
+                     "aggregator": "zimsum",
+                     "color": "",
+                     "expression": "",
+                     "fill": true,
+                     "format": "",
+                     "legend": "Block Capacity",
+                     "metric": "BlockCapacity",
+                     "metricSource": "",
+                     "id": "BlockCapacity",
+                     "name": "Block Capacity",
+                     "rate": false,
+                     "rateOptions": null,
+                     "type": "line"
+                   }
+                 ],
+                 "builtin": false,
+                 "units": "",
+                 "base": 0
+               },
+               {
+                 "id": "RpcProcessingTimeNumOps",
+                 "name": "RPC Call Count",
+                 "footer": false,
+                 "format": "",
+                 "returnset": "EXACT",
+                 "type": "line",
+                 "tags": null,
+                 "miny": null,
+                 "maxy": null,
+                 "yAxisLabel": "RPC Calls",
+                 "description": "Total number of RPC calls",
+                 "range": {
+                   "start": "",
+                   "end": "0s-ago"
+                 },
+                 "datapoints": [
+                   {
+                     "aggregator": "zimsum",
+                     "color": "",
+                     "expression": "",
+                     "fill": false,
+                     "format": "",
+                     "legend": "RPC Calls",
+                     "metric": "RpcProcessingTimeNumOps",
+                     "metricSource": "",
+                     "id": "RpcProcessingTimeNumOps",
+                     "name": "RPC Call Count",
+                     "rate": true,
+                     "rateOptions": {
+                       "counter": true,
+                       "counterMax": null,
+                       "resetThreshold": 1048576
+                     },
+                     "type": "line"
+                   }
+                 ],
+                 "builtin": false,
+                 "units": "",
+                 "base": 0
+               },
+               {
+                 "id": "SecondaryNameNode",
+                 "name": "Secondary Name Node Sync Times",
+                 "footer": false,
+                 "format": "",
+                 "returnset": "EXACT",
+                 "type": "line",
+                 "tags": null,
+                 "miny": null,
+                 "maxy": null,
+                 "yAxisLabel": "Milliseconds",
+                 "description": "Secondaary Name Node Health",
+                 "range": {
+                   "start": "",
+                   "end": "0s-ago"
+                 },
+                 "datapoints": [
+                   {
+                     "aggregator": "zimsum",
+                     "color": "",
+                     "expression": "",
+                     "fill": false,
+                     "format": "",
+                     "legend": "Average fsimage upload",
+                     "metric": "PutImageAvgTime",
+                     "metricSource": "",
+                     "id": "PutImageAvgTime",
+                     "name": "PutImageAvgTime",
+                     "rate": true,
+                     "rateOptions": {
+                       "counter": true,
+                       "counterMax": null,
+                       "resetThreshold": 1048576
+                     },
+                     "type": "line"
+                   },
+                   {
+                     "aggregator": "zimsum",
+                     "color": "",
+                     "expression": "",
+                     "fill": false,
+                     "format": "",
+                     "legend": "Average fsimage download",
+                     "metric": "GetImageAvgTime",
+                     "metricSource": "",
+                     "id": "GetImageAvgTime",
+                     "name": "GetImageAvgTime",
+                     "rate": true,
+                     "rateOptions": {
+                       "counter": true,
+                       "counterMax": null,
+                       "resetThreshold": 1048576
+                     },
+                     "type": "line"
+                   },
+                   {
+                     "aggregator": "zimsum",
+                     "color": "",
+                     "expression": "",
+                     "fill": false,
+                     "format": "",
+                     "legend": "Average edits download",
+                     "metric": "GetEditAvgTime",
+                     "metricSource": "",
+                     "id": "GetEditAvgTime",
+                     "name": "GetEditAvgTime",
+                     "rate": true,
+                     "rateOptions": {
+                       "counter": true,
+                       "counterMax": null,
+                       "resetThreshold": 1048576
+                     },
+                     "type": "line"
+                   }
+                 ],
+                 "builtin": false,
+                 "units": "",
+                 "base": 0
+               },
+               {
+                 "id": "ProcessingAvgTime",
+                 "name": "Average Time for Journal transactions",
+                 "footer": false,
+                 "format": "",
+                 "returnset": "EXACT",
+                 "type": "line",
+                 "tags": null,
+                 "miny": null,
+                 "maxy": null,
+                 "yAxisLabel": "Milliseconds",
+                 "description": "Average time of for various processing in milliseconds",
+                 "range": {
+                   "start": "",
+                   "end": "0s-ago"
+                 },
+                 "datapoints": [
+                   {
+                     "aggregator": "avg",
+                     "color": "",
+                     "expression": "",
+                     "fill": true,
+                     "format": "",
+                     "legend": "Transaction average time",
+                     "metric": "TransactionsAvgTime",
+                     "metricSource": "",
+                     "id": "TransactionsAvgTime",
+                     "name": "Transaction average time",
+                     "rate": false,
+                     "rateOptions": null,
+                     "type": "line"
+                   },
+                   {
+                     "aggregator": "avg",
+                     "color": "",
+                     "expression": "",
+                     "fill": true,
+                     "format": "",
+                     "legend": "Block reporting avg time",
+                     "metric": "BlockReportAvgTime",
+                     "metricSource": "",
+                     "id": "BlockReportAvgTime",
+                     "name": "Block reporting avg time",
+                     "rate": false,
+                     "rateOptions": null,
+                     "type": "line"
+                   },
+                   {
+                     "aggregator": "avg",
+                     "color": "",
+                     "expression": "",
+                     "fill": true,
+                     "format": "",
+                     "legend": "Cache reporting average time",
+                     "metric": "CacheReportAvgTime",
+                     "metricSource": "",
+                     "id": "CacheReportAvgTime",
+                     "name": "Cache reporting average time",
+                     "rate": false,
+                     "rateOptions": null,
+                     "type": "line"
+                   }
+                 ],
+                 "builtin": false,
+                 "units": "",
+                 "base": 0
+               }
+             ],
+             "ThresholdConfigs": null
+           },
+           "MemoryLimit": 0,
+           "CPUShares": 0,
+           "PIDFile": ""
+         }
+       ],
+       "Tasks": null,
+       "LogFilters": null,
+       "Volumes": null,
+       "LogConfigs": null,
+       "Snapshot": {
+         "Pause": "",
+         "Resume": ""
+       },
+       "RAMCommitment": "",
+       "CPUCommitment": 0,
+       "DisableShell": false,
+       "Runs": null,
+       "Commands": null,
+       "Actions": null,
+       "HealthChecks": null,
+       "Prereqs": null,
+       "MonitoringProfile": {
+         "MetricConfigs": null,
+         "GraphConfigs": null,
+         "ThresholdConfigs": null
+       },
+       "MemoryLimit": 0,
+       "CPUShares": 0,
+       "PIDFile": ""
+     }
+   ],
+   "ConfigFiles": null,
+   "ServicedVersion": {
+     "Version": "1.2.0",
+     "GoVersion": "go1.6",
+     "Date": "Mon_Jun_13_16:44:59_UTC_2016",
+     "Gitcommit": "43f914d-dirty",
+     "Gitbranch": "develop",
+     "Buildtag": "0",
+     "Release": ""
+   },
+   "TemplateVersion": {
+     "branch": "develop",
+     "commit": "4a901982d2265ffdab10ee52909f893fa4185f84",
+     "repo": "git@github.com:zenoss/zenoss-service",
+     "tag": "4a90198"
+   }
+ }
