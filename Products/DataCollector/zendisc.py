@@ -723,4 +723,5 @@ class ZenDisc(ZenModeler):
 if __name__ == "__main__":
     d = ZenDisc()
     d.processOptions()
+    print(d.options)
     d.run()

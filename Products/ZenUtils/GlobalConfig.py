@@ -139,10 +139,13 @@ class _GlobalConfParserAdapter(object):
         @parameter filename: path to the configuration file
         @type filename: string
         """
+        print(filename)
         lines = []
         try:
             with open(filename) as file:
                 for line in file:
+                    if 'prod' in line:
+                        print(line)
                     if line.lstrip().startswith('#') or line.strip() == '':
                         lines.append(dict(type='comment', line=line))
                     else:

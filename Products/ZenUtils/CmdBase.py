@@ -127,13 +127,16 @@ class CmdBase(object):
         # Get defaults from global.conf. They will be overridden by
         # daemon-specific config file or command line arguments.
         applyGlobalConfToParser(self.parser)
+        self.num_calls_to_parseOptions = 0
         self.parseOptions()
         if self.options.configfile:
+            print('Debug: ', self.options.configfile)
             self.parser.defaults = self.getConfigFileDefaults(self.options.configfile)
             # We've updated the parser with defaults from configs, now we need
             # to reparse our command-line to get the correct overrides from
             # the command-line
             self.parseOptions()
+            # print(self.options)
 
         if self.doesLogging:
             self.setupLogging()
@@ -209,13 +212,17 @@ class CmdBase(object):
         """
         Uses the optparse parse previously populated and performs common options.
         """
-
+        self.num_calls_to_parseOptions = self.num_calls_to_parseOptions + 1
+        print("CmdBase.parseOptions(): {}th call".format(self.num_calls_to_parseOptions))
         if self.noopts:
             args = []
         else:
             args = self.inputArgs
 
         (self.options, self.args) = self.parser.parse_args(args=args)
+        print(type(self.options))
+        # import pdb
+        # pdb.set_trace()
 
         if self.options.genconf:
             self.generate_configs( self.parser, self.options )
@@ -288,6 +295,8 @@ class CmdBase(object):
         try:
             with open(filename) as file:
                 for line in file:
+                    if '_' in line:
+                        print line
                     if line.lstrip().startswith('#') or line.strip() == '':
                         lines.append(dict(type='comment', line=line))
                     else:
