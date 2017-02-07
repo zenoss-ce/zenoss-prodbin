@@ -316,6 +316,9 @@
                 }, {
                     text: _t('Expand Graph'),
                     handler: Ext.bind(this.expandGraph, this)
+                }, {
+                    text: _t('Toggle Legend'),
+                    handler: Ext.bind(this.toggleLegend, this)
                 }]
             });
             item.on('click', function(event, t) {
@@ -388,6 +391,25 @@
                 };
             });
 
+        },
+        toggleLegend: function() {
+            var chart = zenoss.visualization.chart.getChart(this.graphId),
+                footer = chart.$div.find(".zenfooter"),
+                chartContainer = chart.$div.find(".zenchart");
+
+            if (footer[0].style["display"] != "none") {
+                var ajustedHeight = chartContainer.outerHeight() + footer.outerHeight();
+                footer[0].style["display"] = "none";
+                chart.config.footer = false;
+                chartContainer[0].style["height"] = ajustedHeight + "px";
+                chart.resize();
+            } else {
+                footer[0].style["display"] = "block";
+                chart.config.footer = true;
+                var ajustedHeight = chartContainer[0].style["height"] - footer.outerHeight();
+                chartContainer[0].style["height"] = ajustedHeight + "px";
+                chart.resize();
+            }
         },
         displayLink: function(){
             var config = {},
