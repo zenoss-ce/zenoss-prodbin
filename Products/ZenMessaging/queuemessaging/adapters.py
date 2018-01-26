@@ -68,6 +68,7 @@ class DeviceProtobuf(ObjectProtobuf):
     def fill(self, proto):
         self.autoMapFields(proto)
         proto.title = _safestr(self.obj.titleOrId())
+        proto.path = _safestr('/'.join(self.obj.getPrimaryPath().split('/')[3:]))
         return proto
 
 
