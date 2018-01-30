@@ -100,7 +100,7 @@ rm -rf ${REPO_PATH}
 cp -r $WORKSPACE/${REPO_NAME} ${REPO_PATH}
 
 echo Creating a devimg...
-zendev devimg --clean
+# zendev devimg --clean
 
 echo Running the tests...
 # zendev test --no-tty -- --no-zenpacks
