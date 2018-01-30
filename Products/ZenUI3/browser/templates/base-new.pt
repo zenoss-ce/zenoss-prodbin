@@ -30,6 +30,8 @@
         <link rel="stylesheet" type="text/css" href="++resource++zenui/css/zenui3.css" />
         <link rel="stylesheet" type="text/css" href="++resource++extjs/examples/ux/css/CheckHeader.css" />
         <link rel="stylesheet" type="text/css" href="++resource++zenui/js/codemirror/codemirror.css" />
+        <link tal:condition="python:True"
+              rel="stylesheet" type="text/css" href="/++resource++zenui/css/zen-cse.css" />
 
         <!-- Dynamic stylesheets -->
         <tal:block tal:content="structure provider:all-css"/>
@@ -52,7 +54,7 @@
 
     </head>
 
-    <body>
+    <body class="z-cse">
         <div id="header">
             <div class="bg">
                 <div class="bg-leftcap">
