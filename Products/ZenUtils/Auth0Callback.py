@@ -9,6 +9,8 @@
 from Products.Five.browser import BrowserView
 from .Auth0 import getAuth0Conf, getZenossURI, getQueryArgs
 import httplib
+import base64
+import json
 
 class Auth0Callback(BrowserView):
     """
@@ -16,15 +18,9 @@ class Auth0Callback(BrowserView):
 
     The token is in the window.location.hash and the browser only seems to make
     it visible to us when the redirected response is resolved.
-
-    TODO:
-    - Find out how we can get the user back to the page they originally tried
-      to hit, currently just using https://zenoss5.zenoss-1423-ld/zport/dmd,
-      but may be able to pass that through with "state" arg to Auth0
-    - Share nonce between Auth0 PAS plugin and here
-    - Read in Domain and Client ID from config
     """
     def __call__(self):
+        # TODO: figure out if it's better to use the Auth0 code flow
         # req = self.request
         # resp = req['RESPONSE']
         # code = getQueryArgs(req).get('code', '')
@@ -38,7 +34,12 @@ class Auth0Callback(BrowserView):
         # print "AUTH0 CALLBACK DATA:\n%s" % data
         # return data
         conf = getAuth0Conf()
-
+        # sanitize tenant to get auth0 domain
+        domain = conf['tenant'].replace('https://', '').replace('/', '')
+        nonce = self.request.get('__auth_nonce')
+        state = self.request.get('__auth_state')
+        state_obj = base64.urlsafe_b64decode(state)
+        came_from = json.loads(state_obj).get('came_from')
         return """<!DOCTYPE html>
 <html>
   <head>
@@ -51,11 +52,11 @@ class Auth0Callback(BrowserView):
     new auth0.WebAuth({
             domain: "%s",
             clientID: "%s"
-        }).parseHash({nonce: "abcd1234"}, function (err, authResult)  {
+        }).parseHash({nonce: "%s", state: "%s"}, function (err, authResult)  {
             console.log("AUTH RESULT", authResult);
             if (authResult && authResult.accessToken && authResult.idToken) {
                 console.log(authResult);
-                window.location ="%s/zport/Auth0Login?idToken="+authResult.idToken;
+                window.location ="%s/zport/Auth0Login?idToken="+authResult.idToken+"&came_from=%s";
             } else if(err){
                 console.error(err);
             } else {
@@ -68,7 +69,7 @@ class Auth0Callback(BrowserView):
   </script>
   </body>
 </html>
-""" % (conf['tenant'].replace('https://', '').replace('/', ''), conf['clientid'], getZenossURI(self.request))
+""" % (domain, conf['clientid'], nonce, state, getZenossURI(self.request), came_from)
 
 class Auth0Login(BrowserView):
     """
