@@ -25,7 +25,8 @@
         <link rel="shortcut icon" href="/zport/dmd/favicon.ico" type="image/x-icon"/>
 
         <!-- Static stylesheets -->
-        <link rel="stylesheet" type="text/css" href="/++resource++zenui/css/xtheme-zenoss.css" />
+        <link rel="stylesheet" type="text/css" href="/++resource++extjs/classic/theme-classic/resources/theme-classic-all-debug.css" />
+        <!--?<link rel="stylesheet" type="text/css" href="/++resource++zenui/css/xtheme-zenoss.css" />-->
         <link rel="stylesheet" type="text/css" href="/++resource++zenui/css/zenoss.css" />
         <link rel="stylesheet" type="text/css" href="/++resource++zenui/css/zenui3.css" />
         <link rel="stylesheet" type="text/css" href="/++resource++extjs/examples/ux/css/CheckHeader.css" />
@@ -63,8 +64,8 @@
         <tal:block tal:content="structure provider:head-extra"/>
         <tal:block metal:define-slot="head-local"/>
 
-        <link tal:condition="python:True" rel="stylesheet" type="text/css"
-            href="/++resource++zenui/css/zen-cse.css" />
+        <!--?<link tal:condition="python:True" rel="stylesheet" type="text/css"-->
+            <!--?href="/++resource++zenui/css/zen-cse.css" />-->
 
     </head>
 
@@ -118,6 +119,7 @@
 <form id="exportform" method="post" action="/zport/dmd/Events/export">
     <input type="hidden" id="export_body" name="body"/>
 </form>
+<script async src='/++resource++extjs/packages/ux/classic/ux-debug.js'></script>
 <script type="text/javascript">
 Ext.onReady(function(){
 // record when we first started rendering things on the client
@@ -145,36 +147,35 @@ var viewport = new Ext.Viewport({
             region: 'south',
             height: 30,
             renderTo: 'footer',
-            items: [
-                new Ext.Toolbar({
-                    border: false,
-                    id: 'footer_bar',
-                    items: ['->', {
-                        xtype: 'jobswidget',
-                        id: 'jobswidget'
-                    }],
-                    listeners: {
-                        beforeadd: function(bar, item, index) {
-                            if (bar instanceof Ext.toolbar.Toolbar) {
-                                var numitems = bar.items.length,
+            items: [{
+                xtype: 'toolbar',
+                border: false,
+                id: 'footer_bar',
+                items: ['->', {
+                    xtype: 'jobswidget',
+                    id: 'jobswidget'
+                }],
+                listeners: {
+                    beforeadd: function (bar, item, index) {
+                        if (bar instanceof Ext.toolbar.Toolbar) {
+                            var numitems = bar.items.length,
                                     lastitem = bar.items.items[numitems - 1];
-                                if (lastitem && lastitem.xtype == 'jobswidget'
-                                        && index == numitems) {
-                                    // We have the jobs widget already, so
-                                    // change the index passed in by 2 (one for
-                                    // widget, one for filler) so that the jobs
-                                    // widget stays on the right
-                                    bar.insert(index-2, item);
-                                    return false;
-                                }
+                            if (lastitem && lastitem.xtype == 'jobswidget'
+                                    && index == numitems) {
+                                // We have the jobs widget already, so
+                                // change the index passed in by 2 (one for
+                                // widget, one for filler) so that the jobs
+                                // widget stays on the right
+                                bar.insert(index - 2, item);
+                                return false;
                             }
-                        },
-                        render: function(bar){
-                            Ext.get('footer_extra').appendTo(bar.getEl());
                         }
+                    },
+                    render: function (bar) {
+                        Ext.get('footer_extra').appendTo(bar.getEl());
                     }
-                })
-            ],
+                }
+            }],
             border: false
         },{
             id: 'center_panel',
@@ -220,7 +221,7 @@ Ext.onReady(function(){
 </form>
 <script type="text/javascript">
 Ext.History.init(function(mgr){
-    Ext.History.selectByToken(mgr.getToken());
+    // Ext.History.selectByToken(mgr.getToken());
 });
 </script>
 

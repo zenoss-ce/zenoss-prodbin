@@ -24,8 +24,8 @@
 
         if (panel.collapsed) {
             panel.on('expand', function(p){
-                p.setHeight(250).doLayout();
-                Ext.getCmp('detail_panel').doLayout();
+                p.setHeight(250).updateLayout();
+                Ext.getCmp('detail_panel').updateLayout();
                 panel.setContext(dataRecord.data.uid);
             }, this, {single: true});
             panel.expand();
@@ -75,7 +75,8 @@
                 pageSize: 200,
                 initialSortColumn: "name",
                 directFn: Zenoss.remote.ServiceRouter.query,
-                root: 'services'
+                // root: 'services'
+                rootProperty: 'services'
             });
             this.callParent(arguments);
         }

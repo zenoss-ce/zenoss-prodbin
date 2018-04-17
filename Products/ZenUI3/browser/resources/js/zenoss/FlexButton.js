@@ -58,7 +58,7 @@ Ext.define("Zenoss.FlexButton", {
             this.clearTip();
 
             this.menu = Ext.menu.MenuMgr.get(menuConfig);
-            this.up('panel').doLayout();
+            this.up('panel').updateLayout();
         }
 
         return this.menu.add(config);

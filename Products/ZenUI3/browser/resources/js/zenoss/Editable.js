@@ -10,7 +10,7 @@
 
 (function(){
 
-Ext.define("Zenoss.DisplayField", {
+/*Ext.define("Zenoss.DisplayField", {
     extend: "Ext.form.DisplayField",
     alias: ['widget.displayfield'],
     constructor: function(config) {
@@ -24,6 +24,15 @@ Ext.define("Zenoss.DisplayField", {
             v = v.replace(/\n/g, '<br/>');
         }
         Zenoss.DisplayField.superclass.setRawValue.call(this, v);
+    }
+});*/
+Ext.form.DisplayField.override({
+    fieldClass: 'display-field',
+    setRawValue: function(v) {
+        if (v && Ext.isIE && typeof v === 'string') {
+            v = v.replace(/\n/g, '<br/>');
+        }
+        this.callParent([v]);
     }
 });
 
@@ -57,7 +66,7 @@ Ext.define("Zenoss.EditorWithButtons", {
 });
 
 Ext.define("Zenoss.EditableField", {
-    extend: "Zenoss.DisplayField",
+    extend: "Ext.form.DisplayField",
     alias: ['widget.editable'],
     constructor: function(config) {
         config = Ext.applyIf(config||{}, {

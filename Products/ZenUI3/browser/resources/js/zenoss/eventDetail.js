@@ -315,7 +315,7 @@ Ext.onReady(function() {
                             name: 'message',
                             listeners: {
                                 specialkey: function(formEl, e){
-                                    if (e.getCharCode() == Ext.EventObject.ENTER) {
+                                    if (e.getCharCode() == Ext.event.Event.ENTER) {
                                         this.up('form').down('button').handler()
                                     }
                                 }
@@ -494,7 +494,7 @@ Ext.onReady(function() {
                 }
             }, this);
 
-            this.doLayout();
+            this.updateLayout();
         },
 
         getBody: function() {
@@ -570,7 +570,7 @@ Ext.onReady(function() {
                 state[section_id] = false;
             }
             Ext.state.Manager.set("evDetailSectionsState", state);
-            this.getBody().doLayout();
+            this.getBody().updateLayout();
         },
 
         findSection: function(section_id) {
@@ -699,7 +699,7 @@ Ext.onReady(function() {
                 logHtml;
             logHtml = logTemplate.apply(eventData);
             Ext.getCmp('evdetail_log').update(logHtml);
-            this.doLayout();
+            this.updateLayout();
             if (this.showActions) {
                 this.updateEventActions(eventData);
             }

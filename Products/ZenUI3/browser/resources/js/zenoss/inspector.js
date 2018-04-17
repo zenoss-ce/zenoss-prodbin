@@ -130,7 +130,7 @@ Ext.define('Zenoss.inspector.BaseInspector', {
     update: function(data) {
 
         if (this.addNewDataItems(data)) {
-            this.doLayout();
+            this.updateLayout();
         }
 
         // update all the children that have templates
@@ -148,10 +148,10 @@ Ext.define('Zenoss.inspector.BaseInspector', {
         }
 
         if (this.ownerCt) {
-            this.ownerCt.doLayout();
+            this.ownerCt.updateLayout();
         }
         else {
-            this.doLayout();
+            this.updateLayout();
         }
 
     },
@@ -192,7 +192,7 @@ Zenoss.inspector.DirectInspector = Ext.extend(Zenoss.inspector.BaseInspector, {
     },
     initComponent: function() {
         Zenoss.inspector.DirectInspector.superclass.initComponent.call(this);
-        this.addEvents('contextchange');
+        // this.addEvents('contextchange');
         this.on('contextchange', this._onContextChange, this);
     },
     refresh: function() {

@@ -118,30 +118,28 @@ Ext.onReady(function(){
             }
             this.refresh();
         },
-        columns:[
-                {
-                    xtype:'treecolumn',
-                    flex:1,
-                    dataIndex:'text',
-                    renderer:function (value, l, n) {
-                        if(Ext.isString(value)){
-                            return value;
-                        }
-                        var parentNode = n.parentNode;
-                        var xfclass = value.hasTransform ? 'hastransform' : 'sanstransform';
-                        var xfdesc  = value.hasTransform ? 'Has Transform' : 'Has no Transform';
-                        var safeText = Ext.String.htmlEncode(value.text);
-                        var safeDescription = Ext.String.htmlEncode(value.description);
-
-                        var xform = Ext.String.format(" <span class='{0}' title='{1}'></span>", xfclass,xfdesc);
-                        if(parentNode.data.root === true){
-                            return Ext.String.format("{2}<span title='{0}' class='rootNode'>{1}</span>", safeDescription, safeText, xform);
-                        }else{
-                            return Ext.String.format("{2}<span title='{0}' class='subNode'>{1}</span>", safeDescription, safeText, xform);
-                        }
-                    }
+        columns:[{
+            xtype:'treecolumn',
+            flex:1,
+            dataIndex:'text',
+            renderer:function (value, l, n) {
+                if(Ext.isString(value)){
+                    return value;
                 }
-            ],
+                var parentNode = n.parentNode;
+                var xfclass = value.hasTransform ? 'hastransform' : 'sanstransform';
+                var xfdesc  = value.hasTransform ? 'Has Transform' : 'Has no Transform';
+                var safeText = Ext.String.htmlEncode(value.text);
+                var safeDescription = Ext.String.htmlEncode(value.description);
+
+                var xform = Ext.String.format(" <span class='{0}' title='{1}'></span>", xfclass,xfdesc);
+                if(parentNode.data.root === true){
+                    return Ext.String.format("{2}<span title='{0}' class='rootNode'>{1}</span>", safeDescription, safeText, xform);
+                }else{
+                    return Ext.String.format("{2}<span title='{0}' class='subNode'>{1}</span>", safeDescription, safeText, xform);
+                }
+            }
+        }],
         selModel: Ext.create('Zenoss.TreeSelectionModel',{
             tree: 'classes',
             listeners: {
@@ -172,6 +170,9 @@ Ext.onReady(function(){
                     tree.refresh();
                     tree.getStore().on('load', function(){
                         var node = tree.getRootNode().findChild("uid", parentNode, true);
+                        console.log('!!!!!!', tree, node);
+                        window.ttt = tree;
+                        window.nnn= node;
                         tree.expandToChild(node);
                         tree.getView().select(node);
                     }, this, {single:true});
@@ -188,130 +189,109 @@ Ext.onReady(function(){
         }
     };
 
-    var treepanel = {
-        xtype: 'HierarchyTreePanelSearch',
-        items: [classtree]
-    };
-
-    Ext.define("Zenoss.eventclasses.NavigtaionCombo", {
-        alias: ['widget.NavCombo'],
-        extend: "Ext.form.ComboBox",
-        constructor: function(config){
-            config = config || {};
-            Ext.applyIf(config, {
-                id: 'nav_combo',
-                width: 240,
-                displayField: 'name',
-                editable: false,
-                typeAhead: false,
-                value: _t('Mapping Instances'),
-                listeners:{
-                    select: function(combo){
-                        var container = Ext.getCmp('class_center_panel');
-                        container.layout.setActiveItem(combo.getSelectedIndex());
-                        // set the context for the active item:
-                        var contentPanel = classtree.getContentPanel();
-                        contentPanel.setContext(Zenoss.env.contextUid);
-                        Zenoss.Security.setContext(Zenoss.env.contextUid);
-                    }
-                },
-                store:  Ext.create('Ext.data.ArrayStore', {
-                     model: 'Zenoss.model.Name',
-                     data: [[
-                        _t('Mapping Instances')
-                    ],[
-                        _t('Configuration Properties')
-                    ],[
-                        _t('Overridden Objects')
-                    ],[
-                        _t('Transforms')
-                    ],[
-                        _t('Events')
-                    ]]
-                 })
-            });
-            this.callParent(arguments);
-        }
-
-    });
-
-    var event_console = Ext.create('Zenoss.EventGridPanel', {
-        id: 'eventclass_eventsgrid',
-        stateId: 'eventclass_events',
-        columns: Zenoss.env.getColumnDefinitions(['EventClass']),
-        newwindowBtn: true,
-        actionsMenu: false,
-        commandsMenu: false,
-        store: Ext.create('Zenoss.events.Store', {})
-    });
-
     Ext.getCmp('center_panel').add({
         id: 'center_panel_container',
-        layout: 'border',
-        defaults: {
-            split: true
+        layout: {
+            type: 'hbox',
+            align: 'stretch'
         },
         items: [{
             xtype: 'panel',
             id: 'master_panel',
             cls: 'x-zenoss-master-panel',
-            region: 'west',
+            // region: 'west',
             width: 275,
-            maxWidth: 275,
+            maxWidth: 375,
             layout: 'fit',
-            items: [
-                treepanel
-            ]
+            items: [{
+                xtype: 'HierarchyTreePanelSearch',
+                items: [classtree]
+            }]
+        },{
+            xtype: 'splitter'
         },{
             xtype: 'contextcardpanel',
             id: 'class_center_panel',
-            region: 'center',
+            flex: 1,
             activeItem: 0,
             tbar: {
                 cls: 'largetoolbar',
                 height: 38,
-                items: [
-                    {
-                        xtype: 'eventrainbow',
-                        id: 'class_events',
-                        width:152,
-                        refresh: function(){
-                            var me = this;
-                            REMOTE.getEventsCounts({'uid':this.uid}, function(response){
-                                if(response.success){
-                                    me.updateRainbow(response.data);
-                                }
-                            });
+                items: [{
+                    xtype: 'eventrainbow',
+                    id: 'class_events',
+                    width:152,
+                    refresh: function(){
+                        var me = this;
+                        REMOTE.getEventsCounts({'uid':this.uid}, function(response){
+                            if(response.success){
+                                me.updateRainbow(response.data);
+                            }
+                        });
+                    }
+                },
+                '-',
+                {
+                    xtype: 'combo',
+                    id: 'nav_combo',
+                    width: 240,
+                    displayField: 'name',
+                    editable: false,
+                    typeAhead: false,
+                    value: _t('Mapping Instances'),
+                    listeners:{
+                        select: function(combo){
+                            var container = Ext.getCmp('class_center_panel');
+                            container.layout.setActiveItem(combo.getSelectedIndex());
+                            // set the context for the active item:
+                            var contentPanel = classtree.getContentPanel();
+                            contentPanel.setContext(Zenoss.env.contextUid);
+                            Zenoss.Security.setContext(Zenoss.env.contextUid);
                         }
                     },
-                    '-',
-                    {
-                        xtype: 'NavCombo'
-                    }
-                ]
+                    store:  Ext.create('Ext.data.ArrayStore', {
+                         model: 'Zenoss.model.Name',
+                         data: [[
+                            _t('Mapping Instances')
+                        ],[
+                            _t('Configuration Properties')
+                        ],[
+                            _t('Overridden Objects')
+                        ],[
+                            _t('Transforms')
+                        ],[
+                            _t('Events')
+                        ]]
+                     })
+                }]
             },
-            items: [
-                {
-                    xtype: 'classesgrid',
-                    id: 'classesgrid_id',
-                    viewConfig: {
-                        plugins: {
-                            ptype: 'gridviewdragdrop',
-                            dragGroup: 'evclassgriddd'
-                        }
+            items: [{
+                xtype: 'classesgrid',
+                id: 'classesgrid_id',
+                viewConfig: {
+                    plugins: {
+                        ptype: 'gridviewdragdrop',
+                        dragGroup: 'evclassgriddd'
                     }
-                },{
-                    xtype: 'configpropertypanel',
-                    id: 'configpanel_id'
-                },{
-                    xtype: 'overriddenobjects',
-                    id: 'overriddengrid_id'
-                },{
-                    xtype: 'xformmasterpanel'
-                },
-                    event_console
-
-            ]
+                }
+            },{
+                xtype: 'configpropertypanel',
+                id: 'configpanel_id'
+            },{
+                xtype: 'overriddenobjects',
+                id: 'overriddengrid_id'
+            },{
+                xtype: 'xformmasterpanel'
+            },{
+                xtype: 'EventGridPanel',
+                id: 'eventclass_eventsgrid',
+                stateId: 'eventclass_events',
+                columns: Zenoss.env.getColumnDefinitions(['EventClass']),
+                newwindowBtn: true,
+                actionsMenu: false,
+                commandsMenu: false,
+                store: Ext.create('Zenoss.events.Store', {})
+            }]
         }]
     });
 

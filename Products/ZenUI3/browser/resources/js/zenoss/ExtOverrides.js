@@ -169,12 +169,15 @@ Ext.override(Ext.util.Sorter, {
      */
     Ext.reg = function(xtype, cls){
         if (Ext.isString(cls)) {
-            Ext.ClassManager.setAlias(cls, 'widget.'+xtype);
+            // Ext.ClassManager.setAlias(cls, 'widget.'+xtype);
+            Ext.ClassManager.addAlias(cls, 'widget.'+xtype);
         } else {
             // try to register the component
             var clsName ="Zenoss.component." + xtype;
             if (Ext.ClassManager.get(clsName)) {
-                Ext.ClassManager.setAlias(clsName, 'widget.'+xtype);
+                // Ext.ClassManager.setAlias(clsName, 'widget.'+xtype);
+                Ext.ClassManager.addAlias(clsName, 'widget.'+xtype);
+
             }else {
                 throw Ext.String.format("Unable to to register the xtype {0}: change the Ext.reg definition from the object to a string", xtype);
             }
@@ -342,7 +345,7 @@ Ext.override(Ext.util.Sorter, {
      * until we can figure out exactly why it is not rendering. Instead of aborting on an failed layout, just keep
      * running (flush) and ignore the failed layout.
      **/
-    Ext.override(Ext.layout.Context, {
+    /*Ext.override(Ext.layout.Context, {
         runComplete: function () {
             var me = this;
 
@@ -368,13 +371,13 @@ Ext.override(Ext.util.Sorter, {
             return true;
         }
 
-    });
+    });*/
 
     /**
      * The multiselect doesn't test to see if it has a valid return value.
      *
      **/
-    Ext.override(Ext.ux.form.MultiSelect, {
+    /*Ext.override(Ext.ux.form.MultiSelect, {
         getSubmitValue: function() {
             var me = this,
                 delimiter = me.delimiter,
@@ -384,7 +387,7 @@ Ext.override(Ext.util.Sorter, {
             }
             return "";
         }
-    });
+    });*/
 
     /**
      *  Fixes a bug in Ext where when the store is canceling
@@ -468,7 +471,7 @@ Ext.override(Ext.util.Sorter, {
     Ext.override(Ext.grid.column.Column, {
         defaultRenderer: Ext.htmlEncode
     });
-
+/*
     Ext.define('Ext.data.TreeStoreOverride',{
         override: 'Ext.data.TreeStore',
 
@@ -476,7 +479,7 @@ Ext.override(Ext.util.Sorter, {
          * @private
          * @param {Object[]} filters The filters array
          */
-        applyFilters: function(filters){
+        /*applyFilters: function(filters){
             var me = this,
                 decoded = me.decodeFilters(filters),
             i = 0,
@@ -496,7 +499,7 @@ Ext.override(Ext.util.Sorter, {
              * A pristine (unfiltered) collection of the records in this store. This is used to reinstate
              * records when a filter is removed or changed
              */
-            me.snapshot = me.snapshot || me.getRootNode().copy(null, true);
+            /*me.snapshot = me.snapshot || me.getRootNode().copy(null, true);
 
             for (i = 0; i < length; i++) {
                 me.filters.replace(decoded[i]);
@@ -593,7 +596,7 @@ Ext.override(Ext.util.Sorter, {
             var snapshot = this.snapshot;
             return !! snapshot && snapshot !== this.getRootNode();
         }
-    });
+    });*/
 
     function toMomentInTimezone(sourceMoment, timezone) {
         var result = moment.tz(timezone);
@@ -653,7 +656,7 @@ Ext.override(Ext.util.Sorter, {
      * under that number, affecting multi-select in the tree selection model.  The
      * bug is fixed in 4.2.0, and this code should be remove when we upgrade to that release
      */
-
+/*
     Ext.define('EXTJSIV-6824.selection.RowModel', {
         override: 'Ext.selection.RowModel',
         bindComponent: function(view) {
@@ -695,7 +698,7 @@ Ext.override(Ext.util.Sorter, {
             }
         }
     });
-
+*/
     Ext.define('EXTJSIV-6824.selection.TreeModel', {
         override: 'Ext.selection.TreeModel',
         onKeySpace: function(e, t) {
@@ -1052,7 +1055,7 @@ Ext.override(Ext.util.Sorter, {
         1.) rebuild page relations (next/prev) on page add;
         2.) change prune functionality;
      */
-    Ext.override(Ext.data.Store.prototype.PageMap, {
+    /*Ext.override(Ext.data.Store.prototype.PageMap, {
         add: function(key, newValue) {
             var result = this.callParent(arguments);
             this.rebuildMapRelations();
@@ -1070,11 +1073,11 @@ Ext.override(Ext.util.Sorter, {
                 prev = item;
             });
         },
-
+*/
         /*
             rewrite prune functionality to remove pages from start or end depending on the last page;
          */
-        prune: function() {
+        /*prune: function() {
             var me = this,
                 purgeCount = me.maxSize ? (me.length - me.maxSize) : 0,
                 mapKeys = Ext.Object.getKeys(me.map),
@@ -1093,5 +1096,5 @@ Ext.override(Ext.util.Sorter, {
             }
         }
     });
-
+*/
 }());

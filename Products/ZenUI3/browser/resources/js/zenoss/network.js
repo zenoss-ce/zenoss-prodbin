@@ -357,7 +357,8 @@ Ext.define("Zenoss.network.IpAddressStore", {
             pageSize: 200,
             initialSortColumn: "name",
             directFn: Zenoss.remote.NetworkRouter.getIpAddresses,
-            root: 'data'
+            // root: 'data'
+            rootProperty: 'data'
         });
         this.callParent(arguments);
     }
@@ -419,7 +420,7 @@ Ext.getCmp('detail_panel').add(ipAddressGridConfig);
                     infoData.success ? Ext.htmlEncode(infoData.data.description) : '');
                 Ext.getCmp('network-ipcountField').setText(
                     infoData.success ? 'IPs Used/Free: ' + infoData.data.ipcount : '');
-                detailCardPanel.doLayout();
+                detailCardPanel.updateLayout();
             }
         );
 

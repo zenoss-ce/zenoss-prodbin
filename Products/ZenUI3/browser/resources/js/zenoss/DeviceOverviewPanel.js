@@ -33,7 +33,7 @@
                 });
 
                 obj.superclass.constructor.call(this, config);
-                this.addEvents('labelclick');
+                // this.addEvents('labelclick');
             },
             /**
              * Sets the display value for the "edit link" fields.
@@ -293,7 +293,7 @@
             }]
         });
         win.show();
-        win.doLayout();
+        win.updateLayout();
         Ext.getCmp('hwmanufacturercombo').getStore().addListener('load', function fn(){
             var manufacturerName = name(vals.hwManufacturer);
             Ext.getCmp('hwmanufacturercombo').setValue(manufacturerName);
@@ -464,7 +464,7 @@
             }]
         });
         win.show();
-        win.doLayout();
+        win.updateLayout();
     };
 
     var editGroups = function(currentGroups, uid, config) {
@@ -489,7 +489,8 @@
                     width: 250,
                     store: new Ext.data.DirectStore({
                         directFn: config.getGroupFn,
-                        root: config.getGroupRoot,
+                        // root: config.getGroupRoot,
+                        rootProperty: config.getGroupRoot,
                         fields: ['name']
                     }),
                     valueField: 'name',
@@ -559,7 +560,7 @@
                             }
                         }]
                     });
-                    this.bubble(function() {this.doLayout();});
+                    this.bubble(function() {this.updateLayout();});
 
                     if (displayOnly) {
                         return;
@@ -574,7 +575,7 @@
                     }
                     var oldHeight = this.getHeight();
                     panel.destroy();
-                    this.bubble(function() {this.doLayout();});
+                    this.bubble(function() {this.updateLayout();});
                     win.setHeight(win.getHeight() + this.getHeight() - oldHeight);
                 },
                 groups: {},
@@ -625,7 +626,7 @@
             }]
         });
         win.show();
-        win.doLayout();
+        win.updateLayout();
         win.setHeight(win.getHeight() + win.grouplist.getHeight());
     };
 
@@ -641,7 +642,8 @@
                 store: new Ext.data.DirectStore({
                     autoload: true,
                     directFn: Zenoss.remote.DeviceRouter.getLocations,
-                    root: 'locations',
+                    // root: 'locations',
+                    rootProperty: 'locations',
                     fields: ['name']
                 }),
                 valueField: 'name',
@@ -687,7 +689,7 @@
             }]
         });
         win.show();
-        win.doLayout();
+        win.updateLayout();
     };
 
 

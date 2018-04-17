@@ -13,17 +13,23 @@
 Ext.ns('Zenoss');
 
 
-var oldActiveItem = Ext.layout.CardLayout.prototype.setActiveItem;
+/*var oldActiveItem = Ext.layout.CardLayout.prototype.setActiveItem;
 var oldInitEvents = Ext.layout.CardLayout.prototype.initEvents;
 
 Ext.override(Ext.layout.CardLayout, {
     initEvents: function() {
         oldInitEvents.apply(this, arguments);
-        this.owner.addEvents('cardchange');
+        // this.owner.addEvents('cardchange');
     },
     setActiveItem: function(item) {
         oldActiveItem.apply(this, arguments);
         this.owner.fireEvent('cardchange', this.owner, item);
+    }
+});*/
+Ext.layout.container.Card.override({
+    setActiveItem: function(newCard) {
+        this.callParent(arguments);
+        this.owner.fireEvent('cardchange', this.owner, newCard);
     }
 });
 

@@ -31,7 +31,8 @@ Ext.onReady(function(){
                 model: 'Zenoss.sequencegrid.Model',
                 initialSortColumn: "id",
                 directFn: Zenoss.remote.EventClassesRouter.getSequence,
-                root: 'data'
+                // root: 'data'
+                rootProperty: 'data'
             });
             this.callParent(arguments);
         }
@@ -46,7 +47,7 @@ Ext.onReady(function(){
             Ext.applyIf(config, {
                 stateId: 'mapping_sequence_grid',
                 id: 'mapping_sequence_grid',
-                sm: Ext.create('Zenoss.SingleRowSelectionModel', {}),
+                selModel: Ext.create('Zenoss.SingleRowSelectionModel', {}),
                 stateful: true,
                 store: Ext.create('Zenoss.sequencegrid.Store', {}),
                 enableDragDrop: true,
@@ -82,50 +83,47 @@ Ext.onReady(function(){
                         }
                     }
                 },
-                columns: [
-                    {
-                        id: 'uid_seq_id',
-                        dataIndex: 'uid',
-                        hidden: true
-
-                    },{
-                        header: _t('Seq'),
-                        id: 'seq_seq_id',
-                        dataIndex: 'sequence',
-                        width: 30,
-                        sortable: false
-                    },{
-                        header: _t('ID'),
-                        id: 'map_seq_id',
-                        dataIndex: 'id',
-                        renderer: function(value, metaData, record){
-                            if(record.get("uid") === Ext.getCmp('mappingDialog').contextUid){
-                                return '<b>* '+value+'</b>';
-                            }
-                            return value;
-                        },
-                        flex: 1,
-                        sortable: false
-                    },{
-                        header: _t("Event Class"),
-                        id: 'class_seq_id',
-                        dataIndex: 'eventClass',
-                        width: 200,
-                        sortable: false
-                    },{
-                        header: _t("EventClass Key"),
-                        id: 'key_seq_id',
-                        dataIndex: 'eventClassKey',
-                        flex: 1,
-                        sortable: false
-                    },{
-                        header: _t("Evaluation"),
-                        id: 'eval_seq_id',
-                        dataIndex: 'eval',
-                        flex: 1,
-                        sortable: false
-                    }
-                    ]
+                columns: [{
+                    id: 'uid_seq_id',
+                    dataIndex: 'uid',
+                    hidden: true
+                },{
+                    header: _t('Seq'),
+                    id: 'seq_seq_id',
+                    dataIndex: 'sequence',
+                    width: 30,
+                    sortable: false
+                },{
+                    header: _t('ID'),
+                    id: 'map_seq_id',
+                    dataIndex: 'id',
+                    renderer: function(value, metaData, record){
+                        if(record.get("uid") === Ext.getCmp('mappingDialog').contextUid){
+                            return '<b>* '+value+'</b>';
+                        }
+                        return value;
+                    },
+                    flex: 1,
+                    sortable: false
+                },{
+                    header: _t("Event Class"),
+                    id: 'class_seq_id',
+                    dataIndex: 'eventClass',
+                    width: 200,
+                    sortable: false
+                },{
+                    header: _t("EventClass Key"),
+                    id: 'key_seq_id',
+                    dataIndex: 'eventClassKey',
+                    flex: 1,
+                    sortable: false
+                },{
+                    header: _t("Evaluation"),
+                    id: 'eval_seq_id',
+                    dataIndex: 'eval',
+                    flex: 1,
+                    sortable: false
+                }]
             });
             this.callParent(arguments);
         },
@@ -189,11 +187,14 @@ Ext.onReady(function(){
         // form config
         config = {
             submitHandler: addhandler,
-            height:Ext.getBody().getViewSize().height,
-            width:Ext.getBody().getViewSize().width*0.8, //80%
+            // height:Ext.getBody().getViewSize().height,
+            // width:Ext.getBody().getViewSize().width*0.8, //80%
+            height: '100%',
+            width: '80%',
             id: 'mappingDialog',
             contextUid: null,
             title: _t("Add New Event Class Mapping"),
+            // scrollable: false,
             listeners: {
                 'hide': function(){
                     if (grid) {
@@ -250,207 +251,189 @@ Ext.onReady(function(){
                     }
                 }
             },
-            items: [
-                {
-                    xtype: 'label',
-                    name: 'sequence',
-                    id: 'sequence_text_id',
-                    style: 'color:white;padding:5px 5px 3px 5px;position:absolute;top:-16px;left:600px;',
-                    margin: '13 0 0 0',
-                    width:100
-                },{
-                    xtype: 'tabpanel',
-                    id: 'blackTabs',
-                    listeners: {
-                        'afterrender': function(p){
-                            if(data.whichPanel === 'sequence'){
-                                p.setActiveTab(3);
+            items: [{
+                xtype: 'label',
+                name: 'sequence',
+                id: 'sequence_text_id',
+                style: 'color:white;padding:5px 5px 3px 5px;position:absolute;top:-16px;left:600px;',
+                margin: '13 0 0 0',
+                width:100
+            },{
+                xtype: 'tabpanel',
+                id: 'blackTabs',
+                listeners: {
+                    'afterrender': function(p){
+                        if(data.whichPanel === 'sequence'){
+                            p.setActiveTab(3);
+                        }
+                    }
+                },
+                bodyStyle: {
+                    padding: '10 0 10 0'
+                },
+                defaults: {
+                    scrollable: 'y'
+                },
+                items: [{
+                    title: 'Matching',
+                    items:[{
+                        xtype: 'container',
+                        layout: 'hbox',
+                        margin: '0 0 30px 0',
+                        items: [{
+                            xtype: 'textfield',
+                            name: 'name',
+                            fieldLabel: _t('Instance Name'),
+                            margin: '0 10px 0 0',
+                            width:320,
+                            regex: Zenoss.env.textMasks.allowedNameTextDash,
+                            regexText: Zenoss.env.textMasks.allowedNameTextFeedbackDash,
+                            allowBlank: false
+                        },{
+                            xtype: 'hidden',
+                            name: 'instanceName'
+                        },{
+                            xtype: 'textfield',
+                            name: 'eventclasskey',
+                            margin: '0 40px 0 0',
+                            fieldLabel: _t('Event Class Key'),
+                            regex: Zenoss.env.textMasks.allowedNameTextDashDot,
+                            regexText: Zenoss.env.textMasks.allowedNameTextFeedbackDashDot,
+                            width:320
+                        }]
+                    },{
+                        xtype: 'minieditorpanel',
+                        title: 'Example',
+                        id: 'example_panel',
+                        name: 'example_panel',
+                        margin: '0 20 20 0'
+                    },{
+                        xtype: 'minieditorpanel',
+                        name: 'rule_panel',
+                        id: 'rule_panel',
+                        margin: '0 20 20 0',
+                        title: 'Rule (Single line Python Expression)',
+                        tools:[{
+                            type: 'save',
+                            tooltip: 'Test this Rule',
+                            handler:  function(event, html, button){
+                                var value = button.ownerCt.items.items[0].getValue();
+                                Zenoss.remote.EventClassesRouter.testRule({'rule':value}, function(response){
+                                    if(response.success){
+                                        Zenoss.message.info(_t('Rule compiles without error'));
+                                    }
+                                });
+                            }
+                        }],
+                        collapsed: true,
+                        listeners:{
+                            expand: function(){
+                                var regex_panel = Ext.getCmp('regex_panel');
+                                if(regex_panel.getValue() !== ""){
+                                    Ext.getCmp('rule_panel').collapse();
+                                    new Zenoss.dialog.SimpleMessageDialog({
+                                        title: _t('Regex panel is not empty'),
+                                        message: _t("Please clear the regex panel to continue. You cannot have both a rule and a regex at the same time."),
+                                        buttons: [{
+                                            xtype: 'DialogButton',
+                                            text: _t('OK')
+                                        }]
+                                    }).show();
+                                }else{
+                                    regex_panel.collapse();
+                                }
                             }
                         }
-                    },
-                    bodyStyle: {
-                        padding: '10 0 10 0'
-                    },
-                        items: [
-                            {
-                                title: 'Matching',
-                                items:[
-                                {
-                                    xtype: 'panel',
-                                    layout: 'hbox',
-                                    margin: '0 0 30px 0',
-                                    items: [
-                                        {
-                                            xtype: 'textfield',
-                                            name: 'name',
-                                            fieldLabel: _t('Instance Name'),
-                                            margin: '0 10px 0 0',
-                                            width:320,
-                                            regex: Zenoss.env.textMasks.allowedNameTextDash,
-                                            regexText: Zenoss.env.textMasks.allowedNameTextFeedbackDash,
-                                            allowBlank: false
-                                        },{
-                                            xtype: 'hidden',
-                                            name: 'instanceName'
-                                        },{
-                                            xtype: 'textfield',
-                                            name: 'eventclasskey',
-                                            margin: '0 40px 0 0',
-                                            fieldLabel: _t('Event Class Key'),
-                                            regex: Zenoss.env.textMasks.allowedNameTextDashDot,
-                                            regexText: Zenoss.env.textMasks.allowedNameTextFeedbackDashDot,
-                                            width:320
-                                        }
-                                    ]
-
-                                },{
-                                    xtype: 'panel',
-                                    items:[
-                                        {
-                                            xtype: 'minieditorpanel',
-                                            title: 'Example',
-                                            id: 'example_panel',
-                                            name: 'example_panel',
-                                            margin: '0 20 20 0'
-                                        },{
-                                            xtype: 'minieditorpanel',
-                                            name: 'rule_panel',
-                                            id: 'rule_panel',
-                                            margin: '0 20 20 0',
-                                            title: 'Rule (Single line Python Expression)',
-                                            tools:[{
-                                                type: 'save',
-                                                tooltip: 'Test this Rule',
-                                                handler:  function(event, html, button){
-                                                    var value = button.ownerCt.items.items[0].getValue();
-                                                    Zenoss.remote.EventClassesRouter.testRule({'rule':value}, function(response){
-                                                        if(response.success){
-                                                            Zenoss.message.info(_t('Rule compiles without error'));
-                                                        }
-                                                    });
-                                                }
-                                            }],
-                                            collapsed: true,
-                                            listeners:{
-                                                expand: function(){
-                                                    var regex_panel = Ext.getCmp('regex_panel');
-                                                    if(regex_panel.getValue() !== ""){
-                                                        Ext.getCmp('rule_panel').collapse();
-                                                        new Zenoss.dialog.SimpleMessageDialog({
-                                                            title: _t('Regex panel is not empty'),
-                                                            message: _t("Please clear the regex panel to continue. You cannot have both a rule and a regex at the same time."),
-                                                            buttons: [{
-                                                                xtype: 'DialogButton',
-                                                                text: _t('OK')
-                                                            }]
-                                                        }).show();
-                                                    }else{
-                                                        regex_panel.collapse();
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        {
-                                            xtype: 'minieditorpanel',
-                                            name: 'regex_panel',
-                                            id: 'regex_panel',
-                                            title: 'Regex (Can only have a rule, or regex, not both)',
-                                            tools:[{
-                                                type: 'save',
-                                                tooltip: 'Test this Regex',
-                                                handler:  function(event, html, button){
-                                                    var value = button.ownerCt.items.items[0].getValue();
-                                                    var ex = Ext.getCmp('example_panel').items.items[0].getValue();
-                                                    Zenoss.remote.EventClassesRouter.testRegex({'regex':value, 'example':ex}, function(response){
-                                                        if(response.success){
-                                                            Zenoss.message.info(_t('Regex works with example'));
-                                                        }
-                                                    });
-                                                }
-                                            }],
-                                            margin: '0 20 20 0',
-                                            collapsed: true,
-                                            listeners:{
-                                                expand: function(){
-                                                    var rule_panel = Ext.getCmp('rule_panel');
-                                                    if(rule_panel.getValue() !== ""){
-                                                        Ext.getCmp('regex_panel').collapse();
-                                                        new Zenoss.dialog.SimpleMessageDialog({
-                                                            title: _t('Rule panel is not empty'),
-                                                            message: _t("Please clear the rule panel to continue. You cannot have both a rule and a regex at the same time."),
-                                                            buttons: [{
-                                                                xtype: 'DialogButton',
-                                                                text: _t('OK')
-                                                                }]
-                                                        }).show();
-                                                    }else{
-                                                        rule_panel.collapse();
-                                                    }
-                                                }
-                                            }
-                                        },{
-                                            xtype: 'minieditorpanel',
-                                            title: 'Explanation',
-                                            name: 'explanation_panel',
-                                            id: 'explanation_panel',
-                                            margin: '0 20 20 0'
-                                        },{
-                                            xtype: 'minieditorpanel',
-                                            title: 'Resolution',
-                                            name: 'resolution_panel',
-                                            id: 'resolution_panel',
-                                            margin: '0 20 20 0'
-                                        }
-                                    ]
-                                } ]
-                              },{
-                                title:'Transforms',
-                                hidden: newEntry,
-                                items:[
-                                    {
-                                        xtype: 'xformmasterpanel',
-                                        id: 'xform_mapping_panel',
-                                        autoScroll: false,
-                                        listeners: {
-                                            beforerender: function(g){
-                                                g.setContext(data.uid);
-                                            }
-                                        }
+                    },{
+                        xtype: 'minieditorpanel',
+                        name: 'regex_panel',
+                        id: 'regex_panel',
+                        title: 'Regex (Can only have a rule, or regex, not both)',
+                        tools:[{
+                            type: 'save',
+                            tooltip: 'Test this Regex',
+                            handler:  function(event, html, button){
+                                var value = button.ownerCt.items.items[0].getValue();
+                                var ex = Ext.getCmp('example_panel').items.items[0].getValue();
+                                Zenoss.remote.EventClassesRouter.testRegex({'regex':value, 'example':ex}, function(response){
+                                    if(response.success){
+                                        Zenoss.message.info(_t('Regex works with example'));
                                     }
-                                ]
-                              },{
-                                title:'Configuration Properties',
-                                hidden: newEntry,
-                                items:[
-                                    {
-                                        xtype: 'configpropertypanel',
-                                        style: 'background: #fff',
-                                        listeners: {
-                                            beforerender: function(g){
-                                                g.setHeight(Ext.getCmp('mappingDialog').height-150);
-                                                g.setContext(data.uid);
-                                            }
-                                        }
-                                    }
-                                ]
-                              },{
-                                title: 'Sequence',
-                                hidden: newEntry,
-                                items:[
-                                    {
-                                        xtype: 'sequencegrid',
-                                        listeners: {
-                                            beforerender: function(g){
-                                                g.setContext(data.uid);
-                                            }
-                                        }
-                                    }
-                                ]
-                              }
-                            ]
-
-                }
-            ],
+                                });
+                            }
+                        }],
+                        margin: '0 20 20 0',
+                        collapsed: true,
+                        listeners:{
+                            expand: function(){
+                                var rule_panel = Ext.getCmp('rule_panel');
+                                if(rule_panel.getValue() !== ""){
+                                    Ext.getCmp('regex_panel').collapse();
+                                    new Zenoss.dialog.SimpleMessageDialog({
+                                        title: _t('Rule panel is not empty'),
+                                        message: _t("Please clear the rule panel to continue. You cannot have both a rule and a regex at the same time."),
+                                        buttons: [{
+                                            xtype: 'DialogButton',
+                                            text: _t('OK')
+                                            }]
+                                    }).show();
+                                }else{
+                                    rule_panel.collapse();
+                                }
+                            }
+                        }
+                    },{
+                        xtype: 'minieditorpanel',
+                        title: 'Explanation',
+                        name: 'explanation_panel',
+                        id: 'explanation_panel',
+                        margin: '0 20 20 0'
+                    },{
+                        xtype: 'minieditorpanel',
+                        title: 'Resolution',
+                        name: 'resolution_panel',
+                        id: 'resolution_panel',
+                        margin: '0 20 20 0'
+                    }]
+                },{
+                    title:'Transforms',
+                    hidden: newEntry,
+                    items:[{
+                        xtype: 'xformmasterpanel',
+                        id: 'xform_mapping_panel',
+                        autoScroll: false,
+                        listeners: {
+                            beforerender: function(g){
+                                g.setContext(data.uid);
+                            }
+                        }
+                    }]
+                },{
+                    title:'Configuration Properties',
+                    hidden: newEntry,
+                    items:[{
+                        xtype: 'configpropertypanel',
+                        style: 'background: #fff',
+                        listeners: {
+                            render: function(g){
+                                // g.setHeight(Ext.getCmp('mappingDialog').height-150);
+                                g.setContext(data.uid);
+                            }
+                        }
+                    }]
+                },{
+                    title: 'Sequence',
+                    hidden: newEntry,
+                    items:[{
+                        xtype: 'sequencegrid',
+                        listeners: {
+                            beforerender: function(g){
+                                g.setContext(data.uid);
+                            }
+                        }
+                    }]
+                }]
+            }],
             // explicitly do not allow enter to submit the dialog
             keys: {}
         };
@@ -482,7 +465,8 @@ Ext.onReady(function(){
                 model: 'Zenoss.classesgrid.Model',
                 initialSortColumn: "id",
                 directFn: Zenoss.remote.EventClassesRouter.getInstances,
-                root: 'data'
+                // root: 'data'
+                rootProperty: 'data'
             });
             this.callParent(arguments);
         }
@@ -490,118 +474,117 @@ Ext.onReady(function(){
 
     Ext.define("Zenoss.eventclasses.ClassesGrid", {
         alias: ['widget.classesgrid'],
-        extend:"Zenoss.FilterGridPanel",
+        extend: "Zenoss.BaseGridPanel",
+
+        stateId: 'classes_mapping_grid',
+        // id: 'classes_mapping_grid',
+        stateful: false,
+        multiSelect: true,
+
         constructor: function(config) {
             config = config || {};
             var me = this;
             Ext.applyIf(config, {
-                stateId: 'classes_mapping_grid',
-                id: 'classes_mapping_grid',
-                stateful: false,
-                multiSelect: true,
-                tbar:[
-                    {
-                        xtype: 'largetoolbar',
-                        id: 'mapping_toolbar',
-                        itemId: 'mapping_toolbar',
-                        height:30,
-                        disabled: true,
-                        items: [
-                            {
-                                xtype: 'button',
-                                iconCls: 'add',
-                                hidden: Zenoss.Security.doesNotHavePermission('Manage DMD'),
-                                tooltip: _t('Add new Event Class Mapping Instance'),
-                                handler: function() {
-                                    var grid = Ext.getCmp("classesgrid_id");
-                                    Zenoss.eventclasses.mappingDialog(grid);
-                                }
-                            },{
-                                xtype: 'button',
-                                iconCls: 'delete',
-                                hidden: Zenoss.Security.doesNotHavePermission('Manage DMD'),
-                                tooltip: _t('Delete selected items'),
-                                handler: function() {
-                                    var grid = Ext.getCmp("classesgrid_id"),
-                                        data = [],
-                                        selected = grid.getSelectionModel().getSelection();
-                                    if (Ext.isEmpty(selected)) {
-                                        return;
-                                    }
-                                    for (var i=0; selected.length > i; i++){
-                                        data.push({'context':selected[i].data.uid.split('/instances/')[0], 'id':selected[i].data.id});
-                                    }
-                                    new Zenoss.dialog.SimpleMessageDialog({
-                                        title: _t('Delete Instance'),
-                                        message: _t("Are you sure you want to delete the selected instances?"),
-                                        buttons: [{
-                                            xtype: 'DialogButton',
-                                            text: _t('OK'),
-                                            handler: function() {
-                                                Zenoss.remote.EventClassesRouter.removeInstance({'instances':data}, function(response){
-                                                    if (response.success) {
-                                                        grid.refresh();
-                                                        var bar = Ext.getCmp('mapping_toolbar');
-                                                        bar.items.items[2].setDisabled(false);
-                                                        bar.items.items[3].setDisabled(false);
-                                                    }
-                                                });
-                                            }
-                                        }, {
-                                            xtype: 'DialogButton',
-                                            text: _t('Cancel')
-                                        }]
-                                    }).show();
-                                }
-                            },{
-                                xtype: 'button',
-                                iconCls: 'customize',
-                                tooltip: _t('View and/or Edit selected Event Class Mapping Instance'),
-                                handler: function() {
-                                    var grid = Ext.getCmp("classesgrid_id"),
-                                        data,
-                                        selected = grid.getSelectionModel().getSelection();
-
-                                    if (Ext.isEmpty(selected)) {
-                                        return;
-                                    }
-                                    // single selection
-                                    data = selected[0].data;
-                                    data.whichPanel = 'default';
-                                    Zenoss.eventclasses.mappingDialog(grid, data);
-                                }
-                            },{
-                                xtype: 'button',
-                                iconCls: 'set',
-                                hidden: Zenoss.Security.doesNotHavePermission('Manage DMD'),
-                                tooltip: _t('Use a drag-drop grid to resequence the weights of Instance Maps'),
-                                handler: function() {
-                                    var grid = Ext.getCmp("classesgrid_id");
-                                    var data, selected = grid.getSelectionModel().getSelection();
-                                    if (!selected[0]) {
-                                        return;
-                                    }
-                                    data = selected[0].data;
-                                    data.whichPanel = 'sequence';
-                                    Zenoss.eventclasses.mappingDialog(grid, data);
-                                }
-                            }, {
-                                iconCls: 'adddevice',
-                                xtype: 'button',
-                                tooptip: _t('Add To ZenPack'),
-                                hidden: Zenoss.Security.doesNotHavePermission('Manage DMD'),
-                                handler: function() {
-                                    var addtozenpack = new Zenoss.AddToZenPackWindow(),
-                                        records = me.getSelectionModel().getSelection();
-                                    if (records.length) {
-                                        var targets = Ext.Array.pluck(Ext.Array.pluck(records, "data"), "uid");
-                                        addtozenpack.setTarget(targets);
-                                        addtozenpack.show();
-                                    }
-                                }
-                            }]
+                tbar: [{
+                    xtype: 'largetoolbar',
+                    id: 'mapping_toolbar',
+                    itemId: 'mapping_toolbar',
+                    height:30,
+                    disabled: true,
+                    items: [{
+                        xtype: 'button',
+                        iconCls: 'add',
+                        hidden: Zenoss.Security.doesNotHavePermission('Manage DMD'),
+                        tooltip: _t('Add new Event Class Mapping Instance'),
+                        handler: function(t) {
+                            var grid = t.up('classesgrid');
+                            Zenoss.eventclasses.mappingDialog(grid);
                         }
-                ],
+                    },{
+                        xtype: 'button',
+                        iconCls: 'delete',
+                        hidden: Zenoss.Security.doesNotHavePermission('Manage DMD'),
+                        tooltip: _t('Delete selected items'),
+                        handler: function(t) {
+                            var grid = t.up('classesgrid'),
+                                data = [],
+                                selected = grid.getSelectionModel().getSelection();
+                            if (Ext.isEmpty(selected)) {
+                                return;
+                            }
+                            for (var i=0; selected.length > i; i++){
+                                data.push({'context':selected[i].data.uid.split('/instances/')[0], 'id':selected[i].data.id});
+                            }
+                            new Zenoss.dialog.SimpleMessageDialog({
+                                title: _t('Delete Instance'),
+                                message: _t("Are you sure you want to delete the selected instances?"),
+                                buttons: [{
+                                    xtype: 'DialogButton',
+                                    text: _t('OK'),
+                                    handler: function() {
+                                        Zenoss.remote.EventClassesRouter.removeInstance({'instances':data}, function(response){
+                                            if (response.success) {
+                                                grid.refresh();
+                                                var bar = Ext.getCmp('mapping_toolbar');
+                                                bar.items.items[2].setDisabled(false);
+                                                bar.items.items[3].setDisabled(false);
+                                            }
+                                        });
+                                    }
+                                }, {
+                                    xtype: 'DialogButton',
+                                    text: _t('Cancel')
+                                }]
+                            }).show();
+                        }
+                    },{
+                        xtype: 'button',
+                        iconCls: 'customize',
+                        tooltip: _t('View and/or Edit selected Event Class Mapping Instance'),
+                        handler: function(t) {
+                            var grid = t.up('classesgrid'),
+                                data,
+                                selected = grid.getSelectionModel().getSelection();
+
+                            if (Ext.isEmpty(selected)) {
+                                return;
+                            }
+                            // single selection
+                            data = selected[0].data;
+                            data.whichPanel = 'default';
+                            Zenoss.eventclasses.mappingDialog(grid, data);
+                        }
+                    },{
+                        xtype: 'button',
+                        iconCls: 'set',
+                        hidden: Zenoss.Security.doesNotHavePermission('Manage DMD'),
+                        tooltip: _t('Use a drag-drop grid to resequence the weights of Instance Maps'),
+                        handler: function(t) {
+                            var grid = t.up('classesgrid'),
+                                data, selected = grid.getSelectionModel().getSelection();
+                            if (!selected[0]) {
+                                return;
+                            }
+                            data = selected[0].data;
+                            data.whichPanel = 'sequence';
+                            Zenoss.eventclasses.mappingDialog(grid, data);
+                        }
+                    },{
+                        iconCls: 'adddevice',
+                        xtype: 'button',
+                        tooptip: _t('Add To ZenPack'),
+                        hidden: Zenoss.Security.doesNotHavePermission('Manage DMD'),
+                        handler: function() {
+                            var addtozenpack = new Zenoss.AddToZenPackWindow(),
+                                records = me.getSelectionModel().getSelection();
+                            if (records.length) {
+                                var targets = Ext.Array.pluck(Ext.Array.pluck(records, "data"), "uid");
+                                addtozenpack.setTarget(targets);
+                                addtozenpack.show();
+                            }
+                        }
+                    }]
+                }],
                 store: Ext.create('Zenoss.classesgrid.Store', {}),
                 listeners: {
                     afterrender: function(e){
@@ -620,49 +603,48 @@ Ext.onReady(function(){
                         }
                     }
                 },
-                columns: [
-                    {
-                        header: _t('xForm'),
-                        id: 'xForm',
-                        dataIndex: 'hasTransform',
-                        width:45,
-                        sortable: true,
-                        renderer: function(value){
-                            var cls = (Ext.isIE) ? 'ie_xforms_grid': 'xforms_grid';
-                            if(value){
-                                return '<span class="'+cls+'"><img src="/++resource++zenui/img/xtheme-zenoss/icon/is-transform.png" />&nbsp;</span>';
-                            }
-                            return '<span class="'+cls+'"><img src="/++resource++zenui/img/xtheme-zenoss/icon/no-transform.png" />&nbsp;</span>';
-                        },
-                        filter:false
-                    },{
-                        header: _t('ID'),
-                        id: 'map_id',
-                        dataIndex: 'id',
-                        flex: 1,
-                        sortable: true,
-                        filter: true
-                    },{
-                        id: 'uid_id',
-                        dataIndex: 'uid',
-                        hidden: true
-                    },{
-                        header: _t("EventClass Key"),
-                        id: 'key_id',
-                        dataIndex: 'eventClassKey',
-                        width: 200,
-                        sortable: true,
-                        filter: true
-                    },{
-                        header: _t("Explanation"),
-                        id: 'eval_id',
-                        dataIndex: 'eval',
-                        flex: 1,
-                        sortable: true,
-                        filter: false
-                    }]
+                columns: [{
+                    header: _t('xForm'),
+                    id: 'xForm',
+                    dataIndex: 'hasTransform',
+                    width:45,
+                    sortable: true,
+                    renderer: function(value){
+                        var cls = (Ext.isIE) ? 'ie_xforms_grid': 'xforms_grid';
+                        if(value){
+                            return '<span class="'+cls+'"><img src="/++resource++zenui/img/xtheme-zenoss/icon/is-transform.png" />&nbsp;</span>';
+                        }
+                        return '<span class="'+cls+'"><img src="/++resource++zenui/img/xtheme-zenoss/icon/no-transform.png" />&nbsp;</span>';
+                    },
+                    filter:false
+                },{
+                    header: _t('ID'),
+                    id: 'map_id',
+                    dataIndex: 'id',
+                    flex: 1,
+                    sortable: true,
+                    filter: true
+                },{
+                    id: 'uid_id',
+                    dataIndex: 'uid',
+                    hidden: true
+                },{
+                    header: _t("EventClass Key"),
+                    id: 'key_id',
+                    dataIndex: 'eventClassKey',
+                    width: 200,
+                    sortable: true,
+                    filter: true
+                },{
+                    header: _t("Explanation"),
+                    id: 'eval_id',
+                    dataIndex: 'eval',
+                    flex: 1,
+                    sortable: true,
+                    filter: false
+                }]
             });
-            this.callParent(arguments);
+            this.callParent([config]);
             this.on('itemdblclick', this.onRowDblClick, this);
         },
         setContext: function(uid) {
@@ -671,14 +653,12 @@ Ext.onReady(function(){
             this.callParent(arguments);
         },
         onRowDblClick: function() {
-            var data,
-                selected = this.getSelectionModel().getSelection();
+            var selected = this.getSelection()[0];
             if (!selected) {
                 return;
             }
-            data = selected[0].data;
-            data.whichPanel = 'default';
-            Zenoss.eventclasses.mappingDialog(this, data);
+            selected.data.whichPanel = 'default';
+            Zenoss.eventclasses.mappingDialog(this, selected.data);
         }
     });
 
@@ -689,16 +669,8 @@ Ext.onReady(function(){
         cls: 'codemirror-field',
         originalValue: "",
         initComponent: function() {
-            var me = this;
-            Ext.applyIf(me, {
-                listeners: {
-                    render: {
-                        fn: me.onCodeeditorfieldRender,
-                        scope: me
-                    }
-                }
-            });
             this.callParent(arguments);
+            this.on('render', this.onCodeeditorfieldRender, this);
         },
         onCodeeditorfieldRender: function(abstractcomponent) {
             var me = this;
@@ -723,7 +695,9 @@ Ext.onReady(function(){
             this.callParent(arguments);
         },
         getValue: function() {
-            this.editor.save();
+            if (this.editor) {
+                this.editor.save();
+            }
             return this.callParent(arguments);
         },
         setValue: function(value) {

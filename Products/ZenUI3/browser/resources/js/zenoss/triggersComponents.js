@@ -45,7 +45,7 @@ Ext.define("Zenoss.trigger.TriggerSubscriptions", {
             autoHeight: true,
             deferRowRender: true,
             keys: [{
-                key: [Ext.EventObject.ENTER],
+                key: [Ext.event.Event.ENTER],
                 handler: function() {
                     me.addValueFromCombo();
                 }
@@ -60,7 +60,8 @@ Ext.define("Zenoss.trigger.TriggerSubscriptions", {
                     width: 505,
                     queryMode: 'local',
                     store: Ext.create('Zenoss.NonPaginatedStore', {
-                        root: 'data',
+                        // root: 'data',
+                        rootProperty: 'data',
                         autoLoad: true,
                         idProperty: 'uuid',
                         fields:['uuid','name'],

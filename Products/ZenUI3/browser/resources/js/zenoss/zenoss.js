@@ -360,6 +360,7 @@ function setCursorStyle(style) {
 
 Ext.Ajax.on('beforerequest', function(){
     setCursorStyle("wait");
+    setTimeout(setToDefaultCursorStyle, Ext.Ajax.getTimeout());
 });
 
 function setToDefaultCursorStyle() {
@@ -376,9 +377,12 @@ Ext.Ajax.on('requestexception', setToDefaultCursorStyle);
 
 Zenoss.env.unloading=false;
 
-Ext.EventManager.on(window, 'beforeunload', function() {
+/*Ext.EventManager.on(window, 'beforeunload', function() {
     Zenoss.env.unloading=true;
-});
+});*/
+window.onbeforeunload = function() {
+    Zenoss.env.unloading=true;
+};
 
 
 Ext.Direct.on('exception', function(e) {
@@ -473,16 +477,10 @@ Zenoss.PlaceholderPanel = Ext.extend(Ext.Panel, {
 Ext.define('Zenoss.LargeToolbar',{
     alias: 'widget.largetoolbar',
     extend: 'Ext.toolbar.Toolbar',
-    constructor: function(config) {
-        Ext.applyIf(config, {
-            ui: 'large',
-            cls: 'largetoolbar',
-            height: 45,
-            border: false
-        });
-        Zenoss.LargeToolbar.superclass.constructor.apply(
-            this, arguments);
-    }
+    ui: 'large',
+    cls: 'largetoolbar',
+    height: 45,
+    border: false
 });
 
 Ext.define('Zenoss.SingleRowSelectionModel', {
@@ -507,7 +505,7 @@ Ext.define("Zenoss.ExtraHooksSelectionModel", {
     suppressDeselectOnSelect: false,
     initEvents: function() {
         Zenoss.ExtraHooksSelectionModel.superclass.initEvents.call(this);
-        this.addEvents('rangeselect');
+        // this.addEvents('rangeselect');
         this.on('beforeselect', function(){
             if (this.suppressDeselectOnSelect) {
                 this.selectingRow = true;
@@ -555,21 +553,25 @@ Ext.define("Zenoss.MultiselectMenu", {
         };
         return config;
     },
-    constructor: function(config) {
-        config.menu = config.menu || [];
-        Zenoss.MultiselectMenu.superclass.constructor.apply(this, arguments);
-        this.initialSetValue(config);
+    initComponent: function() {
+        this.callParent(arguments);
+        // add menu if we didn't that in constructor configs;
+        if (!this.getMenu()) {
+            this.setMenu({plain:true});
+        }
+        this.initialSetValue(this);
     },
     initialSetValue: function(config) {
-        var defaultValues = this.defaultValues || [];
+        var defaultValues = this.defaultValues || [],
+            menu = this.getMenu();
         if (Ext.isDefined(config.store)) {
             this.hasLoaded = false;
             config.store.on('load', function(s, rows) {
-                this.menu.removeAll();
+                menu.removeAll();
                 Ext.each(rows, function(row){
                     var cfg = this.makeItemConfig(row.data.name, row.data.value);
                     cfg.checked = (Ext.Array.indexOf(defaultValues, row.data.value)>-1);
-                    this.menu.add(cfg);
+                    menu.add(cfg);
                 }, this);
                 this.hasLoaded = true;
             }, this);
@@ -579,7 +581,7 @@ Ext.define("Zenoss.MultiselectMenu", {
             Ext.each(config.source, function(o){
                 var cfg = this.makeItemConfig(o.name, o.value);
                 cfg.checked = (Ext.Array.indexOf(defaultValues, o.value)>-1);
-                this.menu.add(cfg);
+                menu.add(cfg);
             }, this);
         }
     },
@@ -587,18 +589,20 @@ Ext.define("Zenoss.MultiselectMenu", {
         this.setValue();
     },
     _initialValue: null,
-    getValue: function() {
-        if (!this.hasLoaded) {
-            // Check state, otherwise return default
-            return this._initialValue || this.defaultValues;
-        }
-        var result = [];
-        Ext.each(this.menu.items.items, function(item){
-            if (item.checked)  {
-                result[result.length] = item.value;
+    privates: {
+        getValue: function () {
+            if (!this.hasLoaded) {
+                // Check state, otherwise return default
+                return this._initialValue || this.defaultValues;
             }
-        });
-        return result;
+            var result = [];
+            Ext.each(this.menu.items.items, function (item) {
+                if (item.checked) {
+                    result[result.length] = item.value;
+                }
+            });
+            return result;
+        }
     },
     setValue: function(val) {
         var check = function(item) {
@@ -1230,7 +1234,7 @@ Zenoss.util.callWhenReady = function(componentId, func, scope) {
 * Used in BaseGrid.js by onFocus() and onResize() events.
  * Fixes misalignment between filter and header of a column in IE9.
  */
-Zenoss.util.refreshScrollPosition = function(me) {
+/*Zenoss.util.refreshScrollPosition = function(me) {
     if (me.grid.view.getEl().dom.children[1]) {
         if (me.grid.view.getHeight() < parseFloat(me.grid.view.getEl().dom.children[1].scrollHeight)){
             me.view.el.dom.scrollTop += 1;
@@ -1242,7 +1246,7 @@ Zenoss.util.refreshScrollPosition = function(me) {
             me.grid.columns[0].filterField.focus();
         }
     }
-};
+};*/
 
 /**
  * Used by classes to validate config options that
@@ -1286,6 +1290,28 @@ Ext.override(Ext.form.Checkbox, {
         var result = oldcbsetvalue.call(this, v);
         this.fireEvent('valid', this);
         return result;
+    }
+});
+Ext.data.proxy.Server.override({
+    getParams: function(operation) {
+        var me = this,
+            simpleSortMode = me.getSimpleSortMode(),
+            sortParam = me.getSortParam(),
+            directionParam = me.getDirectionParam(),
+            params = me.callParent(arguments),
+            sort = params[sortParam],
+            dir = params[directionParam];
+
+        // server expect sorter dir and property as string if we use simpleSortMode;
+        if (simpleSortMode) {
+            if (sort) {
+                params[sortParam] = params[sortParam].join(',');
+            }
+            if (dir) {
+                params[directionParam] = params[directionParam].join(',');
+            }
+        }
+        return params;
     }
 });
 
@@ -1482,7 +1508,7 @@ Ext.define('PortletManager', {
     },
     constructor: function (config) {
         this.mixins.observable.constructor.call(this, config);
-        this.addEvents('ready', 'beforeregister');
+        // this.addEvents('ready', 'beforeregister');
     }
 });
 Zenoss.PortletManager = Ext.create('PortletManager', {});

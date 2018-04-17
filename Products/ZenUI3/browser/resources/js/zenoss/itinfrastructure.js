@@ -104,7 +104,8 @@ Ext.onReady(function () {
         },
         store: new Ext.data.DirectStore({
             id: 'deviceClassStore',
-            root: 'deviceClasses',
+            // root: 'deviceClasses',
+            rootProperty: 'deviceClasses',
             totalProperty: 'totalCount',
             model: 'Zenoss.model.Name',
             directFn: REMOTE.getDeviceClassesToAdd,
@@ -863,11 +864,11 @@ Ext.onReady(function () {
                             listeners: {
                                 expand: function () {
                                     win.center();
-                                    win.doLayout();
+                                    win.updateLayout();
                                 },
                                 collapse: function () {
                                     win.center();
-                                    win.doLayout();
+                                    win.updateLayout();
                                 }
                             },
                             items: [{
@@ -1353,7 +1354,7 @@ Ext.onReady(function () {
                                 //create the panel in the center panel if needed
                                 var detail_panel = Ext.getCmp('detail_panel');
                                 detail_panel.add(config);
-                                detail_panel.doLayout();
+                                detail_panel.updateLayout();
                             }
                         }
                     }

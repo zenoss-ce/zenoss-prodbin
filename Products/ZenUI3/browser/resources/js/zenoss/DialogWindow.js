@@ -21,23 +21,26 @@ Ext.ns('Zenoss', 'Zenoss.dialog');
  **/
 Ext.define("Zenoss.dialog.BaseWindow", {
     extend: "Ext.window.Window",
+    // extend: 'Ext.panel.Panel',
     alias: ['widget.basewindow'],
-    constructor: function(config) {
-        config = config || {};
-        Ext.applyIf(config, {
-            //layout: (Ext.isIE) ? 'form': 'fit',
-            plain: true,
-            buttonAlign: 'left',
-            modal: true,
-            constrain: true
-        });
-        Zenoss.dialog.BaseWindow.superclass.constructor.apply(this, arguments);
+    keyMap: {
+        ENTER: {
+            handler: 'onEnterKey',
+            scope: 'this'
+            // event: 'keypress'  // default would be keydown
+        }
     },
-    initEvents: function() {
-        Zenoss.dialog.BaseWindow.superclass.initEvents.apply(this, arguments);
+    plain: true,
+    buttonAlign: 'left',
+    modal: true,
+    constrain: true,
+    // floating: true,
+
+    initComponent: function() {
+        this.callParent(arguments);
         this.on('show', this.focusFirstTextField, this);
-        this.on('show', this.registerEnterKey, this);
     },
+
     focusFirstTextField: function() {
         // go through our items and find a text field
 
@@ -46,50 +49,44 @@ Ext.define("Zenoss.dialog.BaseWindow", {
             fields[0].focus(false, 300);
         }
     },
-    registerEnterKey: function() {
-        var km = this.getKeyMap();
-        km.on(13, function(){
-            var button, el;
-
-            // make sure we are not focused on text areas
-            if (document.activeElement) {
-                el = document.activeElement;
-                if (el.type === "textarea" || el.type === 'button') {
-                    return;
-                }
+    onEnterKey: function() {
+        var button, el;
+        // make sure we are not focused on text areas
+        if (document.activeElement) {
+            el = document.activeElement;
+            if (el.type === "textarea" || el.type === 'button') {
+                return;
             }
+        }
 
-            // the button is on the window
-            var buttons = this.query("button");
-            if (buttons && buttons.length) {
-                button = buttons[0];
-            }else{
-                // the button is on a form
-                var forms = this.query('form');
-                if (forms) {
-                    if (forms.length && forms[0]){
-                        var form = forms[0];
-                        if (form.query("button").length) {
-                            button = form.query("button")[0];
-                        }
+        // the button is on the window
+        var buttons = this.query("button");
+        if (buttons && buttons.length) {
+            button = buttons[0];
+        }else{
+            // the button is on a form
+            var forms = this.query('form');
+            if (forms) {
+                if (forms.length && forms[0]){
+                    var form = forms[0];
+                    if (form.query("button").length) {
+                        button = form.query("button")[0];
                     }
                 }
             }
-
-            if (button && !button.disabled){
-                button.handler(button);
-            }
-        }, this);
-
-    },
-    /**
-     * Make sure any dialog appears above loadmasks.
-     **/
-    show: function() {
-        var oldSeed = Ext.WindowManager.zseed;
-        Ext.WindowManager.zseed = 20000;
-        this.callParent(arguments);
-        Ext.WindowManager.zseec = oldSeed;
+        }
+        if (button && !button.disabled){
+            button.handler(button);
+        }
+    // },
+    // /**
+    //  * Make sure any dialog appears above loadmasks.
+    //  **/
+    // show: function() {
+    //     var oldSeed = Ext.WindowManager.zseed;
+    //     Ext.WindowManager.zseed = 20000;
+    //     this.callParent(arguments);
+    //     Ext.WindowManager.zseec = oldSeed;
     }
 
 });
@@ -138,7 +135,7 @@ function destroyWindow(button) {
  * @constructor
  */
 Ext.define("Zenoss.dialog.DialogButton", {
-    ui: 'dialog-dark',
+    // ui: 'dialog-dark', //XXX
     extend: "Ext.button.Button",
     alias: ['widget.DialogButton'],
     constructor: function(config) {
@@ -263,6 +260,7 @@ Ext.define("Zenoss.dialog.SimpleMessageDialog", {
  */
 Ext.define("Zenoss.FormDialog", {
     extend: "Zenoss.dialog.BaseWindow",
+    // layout: 'fit',
     constructor: function(config) {
         var me = this;
 
@@ -278,10 +276,12 @@ Ext.define("Zenoss.FormDialog", {
             id: config.formId,
             minWidth: 300,
             ref: 'editForm',
+            // anchor: '100% 100%',
             fieldDefaults: {
                 labelAlign: 'top'
             },
             autoScroll: true,
+            // scrollable: false,
             defaults: {
                 xtype: 'textfield'
             },

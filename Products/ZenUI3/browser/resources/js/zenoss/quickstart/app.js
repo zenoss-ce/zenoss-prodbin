@@ -145,9 +145,9 @@
             });
 
             // resize panel on window resize
-            Ext.EventManager.onWindowResize(function(){
+            /*Ext.EventManager.onWindowResize(function(){
                 panel.doComponentLayout();
-            });
+            });*/
             // set shortcuts for wizard controls
             this.mainPanel = panel;
             this.cardPanel = Ext.getCmp('wizard_card_panel');
@@ -169,24 +169,24 @@
             window.globalApp = this;
         },
         setupEvents: function() {
-            this.addEvents(
+            // this.addEvents(
                 /**
                  * @event finish
                  * Fires when the wizard is finished
                  */
-                'finish',
+                // 'finish',
                 /**
                  * @event next button pressed
                  * Fires when the next button on the wizard is pressed
                  * @param {integer} The step that you are moving towards
                  */
-                'nextstep',
+                // 'nextstep',
                 /**
                  * @event previous button pressed
                  * Fires when the previous button on the wizard is pressed
                  * @param {integer} The page you are about to go to
                  */
-                'previousstep');
+                // 'previousstep');
             this.on('nextstep', this.pressNext, this);
             this.on('previousstep', this.pressPrevious, this);
         },

@@ -112,7 +112,7 @@ updateThresholds = function(uid) {
 
     if ( ! Ext.getCmp(thresholdsId) ) {
         panel.add({id: thresholdsId, xtype:'thresholddatagrid'});
-        panel.doLayout();
+        panel.updateLayout();
     }
     Ext.getCmp(thresholdsId).setContext(uid);
 };
@@ -125,7 +125,7 @@ updateGraphs = function(uid) {
             xtype: 'graphgrid',
             id: graphsId
         });
-        panel.doLayout();
+        panel.updateLayout();
     }
     Ext.getCmp(graphsId).setContext(uid);
 };
@@ -333,7 +333,8 @@ new Zenoss.HideFormDialog({
         allowBlank: false,
         width: 450,
         store: Ext.create('Zenoss.NonPaginatedStore', {
-            root: 'data',
+            // root: 'data',
+            rootProperty: 'data',
             autoLoad: false,
             directFn: router.getCopyTargets,
             model: 'Zenoss.model.UidLabel'
@@ -439,7 +440,8 @@ addTemplateDialogConfig = {
         valueField: 'uid',
         name: 'targetUid',
         store: Ext.create('Zenoss.NonPaginatedStore', {
-            root: 'data',
+            // root: 'data',
+            rootProperty: 'data',
             autoLoad: true,
             directFn: router.getAddTemplateTargets,
             model: 'Zenoss.model.UidLabel'

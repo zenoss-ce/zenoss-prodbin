@@ -298,9 +298,7 @@
             Ext.applyIf(config, {
                 stateId: config.id || 'config_property_grid',
                 sm: Ext.create('Zenoss.SingleRowSelectionModel', {}),
-                tbar:[
-
-                    {
+                tbar:[{
                     xtype: 'button',
                     iconCls: 'customize',
                     tooltip: _t('Customize'),
@@ -317,7 +315,7 @@
                         data = selected[0].data;
                         showEditConfigPropertyDialog(data, grid);
                     }
-                    }, {
+                },{
                     xtype: 'button',
                     iconCls: 'refresh',
                     tooltip: _t('Refresh'),
@@ -327,112 +325,111 @@
                         var grid = button.up("configpropertygrid");
                         grid.refresh();
                     }
-                    },{
-                        xtype: 'button',
-                        ref: '../deleteButton',
-                        tooltip: _t('Delete'),
-                        text: _t('Delete Local Copy'),
-                        handler: function(button) {
-                            var grid = button.up("configpropertygrid"),
-                                data,
-                                selected = grid.getSelectionModel().getSelection();
-                            if (Ext.isEmpty(selected)) {
-                                return;
-                            }
-
-                            data = selected[0].data;
-                            if (data.islocal && data.path === '/') {
-                                Zenoss.message.info(_t('{0} can not be deleted from the root definition.'), data.id);
-                                return;
-                            }
-                            if (!data.islocal){
-                                Zenoss.message.info(_t('{0} is not defined locally'), data.id);
-                                return;
-                            }
-                            new Zenoss.dialog.SimpleMessageDialog({
-                                title: _t('Delete Local Property'),
-                                message: Ext.String.format(_t("Are you sure you want to delete the local copy of {0}?"), data.id),
-                                buttons: [{
-                                    xtype: 'DialogButton',
-                                    text: _t('OK'),
-                                    handler: function() {
-                                        if (grid.uid) {
-                                            router.deleteZenProperty({
-                                                uid: grid.uid,
-                                                zProperty: data.id
-                                            }, function(response){
-                                                grid.refresh();
-                                            });
-                                        }
-                                    }
-                                }, {
-                                    xtype: 'DialogButton',
-                                    text: _t('Cancel')
-                                }]
-                            }).show();
+                },{
+                    xtype: 'button',
+                    ref: '../deleteButton',
+                    tooltip: _t('Delete'),
+                    text: _t('Delete Local Copy'),
+                    handler: function(button) {
+                        var grid = button.up("configpropertygrid"),
+                            data,
+                            selected = grid.getSelectionModel().getSelection();
+                        if (Ext.isEmpty(selected)) {
+                            return;
                         }
+
+                        data = selected[0].data;
+                        if (data.islocal && data.path === '/') {
+                            Zenoss.message.info(_t('{0} can not be deleted from the root definition.'), data.id);
+                            return;
+                        }
+                        if (!data.islocal){
+                            Zenoss.message.info(_t('{0} is not defined locally'), data.id);
+                            return;
+                        }
+                        new Zenoss.dialog.SimpleMessageDialog({
+                            title: _t('Delete Local Property'),
+                            message: Ext.String.format(_t("Are you sure you want to delete the local copy of {0}?"), data.id),
+                            buttons: [{
+                                xtype: 'DialogButton',
+                                text: _t('OK'),
+                                handler: function() {
+                                    if (grid.uid) {
+                                        router.deleteZenProperty({
+                                            uid: grid.uid,
+                                            zProperty: data.id
+                                        }, function(response){
+                                            grid.refresh();
+                                        });
+                                    }
+                                }
+                            }, {
+                                xtype: 'DialogButton',
+                                text: _t('Cancel')
+                            }]
+                        }).show();
                     }
-                ],
+                }],
                 store: Ext.create('Zenoss.ConfigProperty.Store', {
                 }),
                 columns: [{
-                        header: _t("Is Local"),
-                        dataIndex: 'islocal',
-                        width: 60,
-                        sortable: true,
-                        filter: false,
-                        renderer: function(value){
-                            if (value) {
-                                return 'Yes';
-                            }
-                            return '';
+                    header: _t("Is Local"),
+                    dataIndex: 'islocal',
+                    width: 60,
+                    sortable: true,
+                    filter: false,
+                    renderer: function(value){
+                        if (value) {
+                            return 'Yes';
                         }
-                    },{
-                        dataIndex: 'category',
-                        header: _t('Category'),
-                        sortable: true,
-                        renderer: function(value) {
-                            return Ext.htmlEncode(value);
+                        return '';
+                    }
+                },{
+                    dataIndex: 'category',
+                    header: _t('Category'),
+                    sortable: true,
+                    renderer: function(value) {
+                        return Ext.htmlEncode(value);
+                    }
+                },{
+                    dataIndex: 'id',
+                    header: _t('Name'),
+                    width: 200,
+                    sortable: true,
+                    renderer: function(value) {
+                        return Ext.htmlEncode(value);
+                    }
+                },{
+                    dataIndex: 'valueAsString',
+                    header: _t('Value'),
+                    width: 150,
+                    renderer: function(v, row, record) {
+                        if (Zenoss.Security.doesNotHavePermission("zProperties Edit") &&
+                            record.data.id === 'zSnmpCommunity') {
+                            return "*******";
                         }
-                    },{
-                        dataIndex: 'id',
-                        header: _t('Name'),
-                        width: 200,
-                        sortable: true,
-                        renderer: function(value) {
-                            return Ext.htmlEncode(value);
-                        }
-                    },{
-                        dataIndex: 'valueAsString',
-                        header: _t('Value'),
-                        width: 150,
-                        renderer: function(v, row, record) {
-                            if (Zenoss.Security.doesNotHavePermission("zProperties Edit") &&
-                                record.data.id === 'zSnmpCommunity') {
-                                return "*******";
-                            }
-                            return Zenoss.render.zProperty(v, record);
-                        },
-                        sortable: false
-                    },{
-                        dataIndex: 'label',
-                        header: _t('Label'),
-                        width: 200,
-                        sortable: true
-                    },{
-                        dataIndex: 'description',
-                        header: _t('Description'),
-                        flex: 1
-                    },{
-                        //id: 'path',
-                        dataIndex: 'path',
-                        header: _t('Path'),
-                        width: 380,
-                        sortable: true,
-                        renderer: function(value) {
-                            return Ext.htmlEncode(value);
-                        }
-                    }]
+                        return Zenoss.render.zProperty(v, record);
+                    },
+                    sortable: false
+                },{
+                    dataIndex: 'label',
+                    header: _t('Label'),
+                    width: 200,
+                    sortable: true
+                },{
+                    dataIndex: 'description',
+                    header: _t('Description'),
+                    flex: 1
+                },{
+                    //id: 'path',
+                    dataIndex: 'path',
+                    header: _t('Path'),
+                    width: 380,
+                    sortable: true,
+                    renderer: function(value) {
+                        return Ext.htmlEncode(value);
+                    }
+                }]
             });
             this.callParent(arguments);
             this.on('itemdblclick', this.onRowDblClick, this);
@@ -458,6 +455,7 @@
             showEditConfigPropertyDialog(data, this);
         },
         disableButtons: function(bool) {
+            if (this.destroyed) return;
             var btns = this.query("button");
             Ext.each(btns, function(btn){
                 btn.setDisabled(bool);
@@ -473,8 +471,8 @@
             this.gridId = Ext.id();
             Ext.applyIf(config, {
                 layout: 'fit',
-                autoScroll: 'y',
-                height: 800,
+                scrollable: 'y',
+                // height: 800,
                 items: [{
                     id: this.gridId,
                     xtype: "configpropertygrid",

@@ -55,7 +55,8 @@ Ext.define("Zenoss.GraphPointStore", {
         Ext.applyIf(config, {
             model: 'Zenoss.graph.GraphPointModel',
             directFn: router.getGraphPoints,
-            root: 'data'
+            // root: 'data'
+            rootProperty: 'data'
         });
         this.callParent(arguments);
     }
@@ -73,7 +74,7 @@ Ext.define("Zenoss.BaseSequenceGrid", {
                 }
             }
         });
-        this.addEvents({'resequence': true});
+        // this.addEvents({'resequence': true});
         Zenoss.BaseSequenceGrid.superclass.constructor.call(this, config);
     }
 });
@@ -166,7 +167,8 @@ Ext.define("Zenoss.GraphPointGrid", {
                                             }
                                         },
                                         store: Ext.create('Zenoss.NonPaginatedStore', {
-                                            root: 'data',
+                                            // root: 'data',
+                                            rootProperty: 'data',
                                             model: 'Zenoss.model.Basic',
                                             directFn: router.getDataPoints
                                         })
@@ -244,7 +246,8 @@ Ext.define("Zenoss.GraphPointGrid", {
                                     editable: false,
                                     allowBlank: false,
                                     store: Ext.create('Zenoss.NonPaginatedStore', {
-                                        root: 'data',
+                                        // root: 'data',
+                                        rootProperty: 'data',
                                         model: 'Zenoss.model.Basic',
                                         directFn: router.getThresholds
                                     }),
@@ -330,7 +333,8 @@ Ext.define("Zenoss.GraphPointGrid", {
                                         editable: false,
                                         allowBlank: false,
                                         store: Ext.create('Zenoss.NonPaginatedStore', {
-                                            root: 'data',
+                                            // root: 'data',
+                                            rootProperty: 'data',
                                             autoLoad: false,
                                             model: 'Zenoss.InstructionTypeModel',
                                             directFn: router.getGraphInstructionTypes

@@ -201,7 +201,7 @@ Ext.define("Zenoss.JobsWidget", {
     },
     initEvents: function() {
         this.callParent(arguments);
-        this.addEvents('update');
+        // this.addEvents('update');
         // Listen to Direct requests for job results
         Ext.Direct.on('event', function(e) {
             if (Ext.isDefined(e.result) && e.result && Ext.isDefined(e.result.new_jobs)) {
@@ -215,7 +215,7 @@ Ext.define("Zenoss.JobsWidget", {
         var me = this,
             klass = Ext.ClassManager.getByAlias("widget.tooltip"),
             tip = this.tip = Ext.create('Ext.tip.ToolTip', {
-                target: this,
+                target: me.el,
                 dismissDelay: 9000,
                 show: function() {
                     klass.prototype.show.call(this);

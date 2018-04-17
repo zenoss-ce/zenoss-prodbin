@@ -170,19 +170,19 @@
             return this.graph;
         },
         initComponent: function(){
-            this.addEvents(
+            // this.addEvents(
                 /**
                  * @event nodeclicked
                  * Fires when the user clicks on an node
                  * @param {Node} d the node clicked on.
                  */
-                'nodeclicked',
+                // 'nodeclicked',
                 /**
                  * @event edgeclicked
                  * Fires when the user clicks on an edge linking two nodes
                  * @param {Edge} d the edge clicked on.
                  */
-                'edgeclicked');
+                // 'edgeclicked');
             this.callParent(arguments);
         },
         refreshTopologyView: function(graph) {

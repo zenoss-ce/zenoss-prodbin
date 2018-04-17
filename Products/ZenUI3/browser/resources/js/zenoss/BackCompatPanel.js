@@ -29,7 +29,7 @@ Ext.define("Zenoss.IFramePanel", {
     },
     initComponent: function(){
         this.callParent(arguments);
-        this.addEvents('frameload', 'framefailed', 'isReady');
+        // this.addEvents('frameload', 'framefailed', 'isReady');
         this.on('frameload', function() {
             // Load any messages that may have been created by the frame
             Zenoss.messenger.checkMessages();
@@ -130,7 +130,7 @@ Ext.define("Zenoss.BackCompatPanel", {
             testEarlyReadiness: true
         });
         Zenoss.BackCompatPanel.superclass.constructor.call(this, config);
-        this.addEvents('frameloadfinished');
+        // this.addEvents('frameloadfinished');
         this.on('frameload', function(win) {
             if (Ext.isDefined(win.Ext) && Ext.isDefined(win.Ext.onReady)) {
                 var me = this;

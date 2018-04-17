@@ -99,41 +99,39 @@
             config = {
                 cls: 'x-hierarchy-search-panel',
                 bodyStyle: 'background-color:#d4e0ee;',
-                items: [
-                    {
-                        xtype: 'searchfield',
-                        id: config.id || Ext.id(),
-                        height: 25,
-                        hidden: !Zenoss.settings.enableTreeFilters,
-                        cls: 'x-hierarchy-search',
-                        enableKeyEvents: true,
-                        ref: 'searchfield'
-                    },
-                    {
-                        xtype: 'panel',
-                        ui: 'hierarchy',
-                        padding: '5px 0 0 0',
-                        items: oldConfig.items,
-                        flex: 1,
-                        autoScroll: true,
-                        regSearchListeners: function (listeners) {
-                            this.ownerCt.query('.searchfield')[0].on(listeners);
-                        }
+                items: [{
+                    xtype: 'searchfield2',
+                    id: config.id || Ext.id(),
+                    height: 25,
+                    hidden: !Zenoss.settings.enableTreeFilters,
+                    cls: 'x-hierarchy-search',
+                    enableKeyEvents: true,
+                    ref: 'searchfield'
+                },{
+                    xtype: 'panel',
+                    ui: 'hierarchy',
+                    padding: '5px 0 0 0',
+                    items: oldConfig.items,
+                    flex: 1,
+                    autoScroll: true,
+                    regSearchListeners: function (listeners) {
+                        this.ownerCt.down('searchfield2').on(listeners);
                     }
-                ],
+                }],
                 layout: {
                     type: 'vbox',
                     align: 'stretch'
-                },
-                listeners: {
+                }
+                /*listeners: {
                     afterrender: function (t) {
                         // fixes 20000px width bug on the targetEl div bug in Ext
                         t.searchfield.container.setWidth(t.ownerCt.getWidth());
                     }
-                }
+                }*/
             };
 
-            Zenoss.HierarchyTreePanelSearch.superclass.constructor.call(this, config);
+            // Zenoss.HierarchyTreePanelSearch.superclass.constructor.call(this, config);
+            this.callParent([config]);
         }
     });
 
@@ -429,7 +427,7 @@
                     }
                 }, this, { single: true });
             }
-            this.addEvents('filter');
+            // this.addEvents('filter');
             this.on('itemclick', this.addHistoryToken, this);
             this.on({
                 beforeexpandnode: function (node) {
@@ -723,7 +721,7 @@
             this.getSelectionModel().select(childNodes[0]);
 
             // and then focus on back on the filter text
-            this.up('HierarchyTreePanelSearch').down('searchfield').focus([false]);
+            this.up('HierarchyTreePanelSearch').down('searchfield2').focus([false]);
         },
         getFilterFn: function (text) {
             var regex = new RegExp(Ext.String.escapeRegex(text), 'i');

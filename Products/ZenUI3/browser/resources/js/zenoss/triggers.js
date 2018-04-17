@@ -251,7 +251,7 @@ Ext.define('Zenoss.triggers.UsersPermissionGrid', {
                 height: 200,
                 autoHeight: true,
                 keys: [{
-                    key: [Ext.EventObject.ENTER],
+                    key: [Ext.event.Event.ENTER],
                     handler: function() {
                         me.addValueFromCombo();
                     }
@@ -268,7 +268,8 @@ Ext.define('Zenoss.triggers.UsersPermissionGrid', {
                         queryMode: 'local',
                         id: 'usersCombo',
                         store: Ext.create('Zenoss.NonPaginatedStore', {
-                            root: 'data',
+                            // root: 'data',
+                            rootProperty: 'data',
                             autoLoad: true,
                             model: 'Zenoss.model.UsersComboStore',
                             directFn: router.getRecipientOptions
@@ -298,14 +299,13 @@ Ext.define('Zenoss.triggers.UsersPermissionGrid', {
                         }
                     }
                 ],
-                store: new Ext.data.JsonStore({
+                store: new Ext.data.Store({
                     model: 'Zenoss.triggers.PermissionGridModel',
                     storeId: 'users_combo_store',
-                    autoLoad: true,
+                    autoLoad: false,
                     data: []
                 }),
-                columns: [
-                    {
+                columns: [{
                         header: _t('Type'),
                         dataIndex: 'type',
                         width: 120,
@@ -684,7 +684,7 @@ Ext.define('Zenoss.triggers.UsersPermissionGrid', {
                 ref: '../addForm',
                 listeners: {
                     validitychange: function(form, isValid) {
-                        dialogue.query('DialogButton')[0].setDisabled(!isValid);
+                        dialogue.down('DialogButton').setDisabled(!isValid);
                     }
                 },
                 buttonAlign: 'left',
@@ -759,7 +759,7 @@ Ext.define('Zenoss.triggers.UsersPermissionGrid', {
                     buttonAlign: 'left',
                     listeners: {
                         validitychange: function(form, isValid) {
-                            me.query('DialogButton')[0].setDisabled(!isValid);
+                            me.down('DialogButton').setDisabled(!isValid);
                         }
                     },
                     items:[config.tabPanel],
@@ -966,7 +966,8 @@ Ext.define('Zenoss.triggers.UsersPermissionGrid', {
                 directFn: router.getNotifications,
                 initialSortColumn: 'newId',
                 initialSortDirection: 'ASC',
-                root: 'data'
+                rootProperty: 'data'
+                // root: 'data'
             });
             this.callParent(arguments);
         }
@@ -1006,9 +1007,9 @@ Ext.define('Zenoss.triggers.UsersPermissionGrid', {
                                 delState = !sel.data.userWrite;
                             }
 
-                            me.deleteButton.setDisabled(state);
-                            me.customizeButton.setDisabled(state);
-                            panel.disableButtons(state);
+                            me.deleteButton.setDisabled(delState);
+                            me.customizeButton.setDisabled(delState);
+                            // panel.disableButtons(state);
                         }
                     },
                     scope: this
@@ -1096,7 +1097,7 @@ Ext.define('Zenoss.triggers.UsersPermissionGrid', {
                                         callback = function(){
                                             var panel = Ext.getCmp(schedulesPanelConfig.id);
                                             panel.getStore().removeAll();
-                                            panel.disableButtons(true);
+                                            // panel.disableButtons(true);
                                             Ext.getCmp(notificationPanelConfig.id).customizeButton.setDisabled(true);
                                             reloadNotificationGrid();
                                         };
@@ -1131,9 +1132,9 @@ Ext.define('Zenoss.triggers.UsersPermissionGrid', {
             this.getStore().load();
             this.deleteButton.setDisabled(true);
             this.customizeButton.setDisabled(true);
-            Ext.getCmp('schedules_panel_add_button').disable();
-            Ext.getCmp('schedules_panel_delete_button').disable();
-            Ext.getCmp('schedules_panel_customize_button').disable();
+            // Ext.getCmp('schedules_panel_add_button').disable();
+            // Ext.getCmp('schedules_panel_delete_button').disable();
+            // Ext.getCmp('schedules_panel_customize_button').disable();
         }
     });
 
@@ -1152,7 +1153,8 @@ Ext.define('Zenoss.triggers.UsersPermissionGrid', {
                 model: 'Zenoss.triggers.TriggersModel',
                 initialSortColumn: "name",
                 directFn: router.getTriggers,
-                root: 'data'
+                rootProperty: 'data'
+                // root: 'data'
             });
             this.callParent(arguments);
         }
@@ -1324,7 +1326,8 @@ Ext.define('Zenoss.triggers.UsersPermissionGrid', {
                 model: 'Zenoss.triggers.ScheduleModel',
                 initialSortColumn: "uid",
                 directFn: router.getWindows,
-                root: 'data'
+                // root: 'data'
+                rootProperty: 'data'
             });
             this.callParent(arguments);
         }
@@ -1345,7 +1348,7 @@ Ext.define('Zenoss.triggers.UsersPermissionGrid', {
                 },
                 listeners: {
                     itemdblclick: function(grid){
-                        var row = grid.getSelectionModel().getSelected();
+                        var row = this.getSelection()[0];
                         if (row) {
                             displayScheduleEditDialogue(row.data);
                         }
@@ -1363,21 +1366,15 @@ Ext.define('Zenoss.triggers.UsersPermissionGrid', {
                                 }, 1000);
                             });
                         }
-                    }
+                    },
+                    selectionchange: function(t, selection){
+                        var disable = !selection.length ? true : !this.parent.userManage;
+                        this.deleteButton.setDisabled(disable);
+                        this.customizeButton.setDisabled(disable);
+                    },
+                    scope: this
                 },
-                selModel: new Zenoss.SingleRowSelectionModel({
-                    listeners: {
-                        select: function() {
-                            var disable = !me.parent.userManage;
-                            me.deleteButton.setDisabled(disable);
-                            me.customizeButton.setDisabled(disable);
-                        },
-                        deselect: function() {
-                            me.deleteButton.setDisabled(true);
-                            me.customizeButton.setDisabled(true);
-                        }
-                    }
-                }),
+                // selModel: new Zenoss.SingleRowSelectionModel(),
                 store: Ext.create('Zenoss.triggers.ScheduleStore', {}),
                 columns: [{
                     xtype: 'booleancolumn',
@@ -1416,7 +1413,7 @@ Ext.define('Zenoss.triggers.UsersPermissionGrid', {
                     ref: '../deleteButton',
                     disabled: true,
                     handler: function(button) {
-                        var row = button.refOwner.getSelectionModel().getSelected(),
+                        var row = this.getSelection()[0],
                             uid,
                             params;
                         if (row){
@@ -1440,7 +1437,8 @@ Ext.define('Zenoss.triggers.UsersPermissionGrid', {
                                 }]
                             }).show();
                         }
-                    }
+                    },
+                    scope: this
                 },{
                     xtype: 'button',
                     iconCls: 'customize',
@@ -1448,11 +1446,12 @@ Ext.define('Zenoss.triggers.UsersPermissionGrid', {
                     disabled:true,
                     ref: '../customizeButton',
                     handler: function(button){
-                        var row = button.refOwner.getSelectionModel().getSelected();
+                        var row = this.getSelection()[0];
                         if (row) {
                             displayScheduleEditDialogue(row.data);
                         }
-                    }
+                    },
+                    scope: this
                 }]
 
             });
@@ -1467,13 +1466,13 @@ Ext.define('Zenoss.triggers.UsersPermissionGrid', {
                 }
             });
             this.addButton.setDisabled(!this.parent.userManage);
-            this.disableButtons(true);
-        },
-        disableButtons: function(bool){
+            // this.disableButtons(true);
+        }
+        /*disableButtons: function(bool){
             var noLocalUserManage = !this.parent.userManage;
             this.deleteButton.setDisabled(bool || noLocalUserManage);
             this.customizeButton.setDisabled(bool || noLocalUserManage);
-        }
+        }*/
     });
 
 
@@ -1888,7 +1887,7 @@ Ext.define('Zenoss.triggers.UsersPermissionGrid', {
         // make firefox draw correctly.
         minWidth: bigWindowWidth+225,
         boxMinWidth: bigWindowWidth+225,
-        layout: 'anchor',
+        // layout: 'anchor',
         title: _t('Trigger'),
         listeners: {
             render: function(){
@@ -1899,38 +1898,37 @@ Ext.define('Zenoss.triggers.UsersPermissionGrid', {
             }
         },
         padding: 10,
-        fieldDefaults: {
+        defaults: {
             labelWidth: 75
         },
-        items:[
-            {
-                xtype: 'hidden',
-                name: 'uuid',
-                ref: 'uuid'
-            },{
-                xtype: 'textfield',
-                name: 'name',
-                ref: 'name',
-                id: 'trigger_tab_content_name_textfield',
-                allowBlank: false,
-                fieldLabel: _t('Name')
-            },{
-                xtype: 'checkbox',
-                name: 'enabled',
-                ref: 'enabled',
-                id: 'trigger_tab_content_enabled_checkbox',
-                fieldLabel: _t('Enabled')
-            },{
-                xtype: 'rulebuilder',
-                fieldLabel: _t('Rule'),
-                labelWidth: 96,
-                margin:'0 0 0 5px',
-                name: 'criteria',
-                ref: 'rule',
-                id: 'triggerRule',
-                subjects: trigger_tab_subjects
-            }
-        ]
+        items:[{
+            xtype: 'hidden',
+            name: 'uuid',
+            ref: 'uuid'
+        },{
+            xtype: 'textfield',
+            name: 'name',
+            ref: 'name',
+            id: 'trigger_tab_content_name_textfield',
+            allowBlank: false,
+            fieldLabel: _t('Name')
+        },{
+            xtype: 'checkbox',
+            name: 'enabled',
+            ref: 'enabled',
+            id: 'trigger_tab_content_enabled_checkbox',
+            fieldLabel: _t('Enabled')
+        },{
+            xtype: 'rulebuilder',
+            fieldLabel: _t('Rule'),
+            labelStyle: 'display: table-cell;',
+            // labelWidth: 96,
+            margin:'0 0 0 5px',
+            name: 'criteria',
+            ref: 'rule',
+            id: 'triggerRule',
+            subjects: trigger_tab_subjects
+        }]
     };
 
     var trigger_tab_users = {
@@ -2012,7 +2010,7 @@ Ext.define('Zenoss.triggers.UsersPermissionGrid', {
                         layout: 'fit',
                         listeners: {
                             validitychange: function(form, isValid) {
-                                this.query('DialogButton')[0].setDisabled(!isValid);
+                                this.down('DialogButton').setDisabled(!isValid);
                             },
                             scope: this
                         },

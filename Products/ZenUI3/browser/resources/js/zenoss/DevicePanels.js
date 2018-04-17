@@ -387,16 +387,16 @@ Ext.define('Zenoss.device.DeviceModel',{
         {name: 'productionState', type: 'string'},
         {name: 'serialNumber', type: 'string'},
         {name: 'tagNumber', type: 'string'},
-        {name: 'hwManufacturer', type: 'object'},
-        {name: 'hwModel', type: 'object'},
-        {name: 'osManufacturer', type: 'object'},
-        {name: 'osModel', type: 'object'},
+        {name: 'hwManufacturer', type: 'auto'/*'object'*/},
+        {name: 'hwModel', type: 'auto'/*'object'*/},
+        {name: 'osManufacturer', type: 'auto'/*'object'*/},
+        {name: 'osModel', type: 'auto'/*'object'*/},
         {name: 'collector', type: 'string'},
         {name: 'priority', type: 'string'},
-        {name: 'systems', type: 'object'},
-        {name: 'groups', type: 'object'},
-        {name: 'location', type: 'object'},
-        {name: 'events', type: 'object'},
+        {name: 'systems', type: 'auto'/*'object'*/},
+        {name: 'groups', type: 'auto'/*'object'*/},
+        {name: 'location', type: 'auto'/*'object'*/},
+        {name: 'events', type: 'auto'/*'object'*/},
         {name: 'availability', type: 'float'},
         {name: 'pythonClass', type: 'string'}
     ],
@@ -419,7 +419,8 @@ Ext.define("Zenoss.DeviceStore", {
             model: 'Zenoss.device.DeviceModel',
             initialSortColumn: "name",
             directFn: Zenoss.remote.DeviceRouter.getDevices,
-            root: 'devices'
+            // root: 'devices'
+            rootProperty: 'devices'
         });
         this.callParent(arguments);
     }

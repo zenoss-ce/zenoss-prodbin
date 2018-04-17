@@ -17,7 +17,7 @@ Ext.onReady(function(){
     var detail_panel = Ext.getCmp('detail_panel');
     var master_panel = Ext.getCmp('master_panel');
     detail_panel.collapse();
-    master_panel.layout = 'border';
+    // master_panel.layout = 'border';
 
     // Make this instance of the detail panel use a unique state ID so
     // it doesn't interfere with the state of other instances of this panel.
@@ -39,9 +39,9 @@ Ext.onReady(function(){
     }
 
     // Selection model
-    var console_selection_model = Ext.create('Zenoss.EventPanelSelectionModel', {
+    var console_selection_model;/* = Ext.create('Zenoss.EventPanelSelectionModel', {
         gridId: 'events_grid'
-    });
+    });*/
 
     var createEventConsoleGrid = function() {
         var console_store = Ext.create('Zenoss.events.Store', {});
@@ -61,6 +61,10 @@ Ext.onReady(function(){
                 hideDisplayCombo: true,
                 newwindowBtn: false
             }),
+            plugins: {
+                gridfilters: true
+                // gridexporter: true
+            },
             appendGlob: true,
             defaultFilters: {
                 severity: [Zenoss.SEVERITY_CRITICAL, Zenoss.SEVERITY_ERROR, Zenoss.SEVERITY_WARNING, Zenoss.SEVERITY_INFO],
@@ -82,12 +86,15 @@ Ext.onReady(function(){
             // Map some other keys
             keys: [{
                 // Enter to pop open the detail panel
-                key: Ext.EventObject.ENTER,
+                key: Ext.event.Event.ENTER,
                 fn: toggleEventDetailContent
             }],
-            selModel: console_selection_model, // defined above
+            selModel: Ext.create('Zenoss.EventPanelSelectionModel', {
+                gridId: 'events_grid'
+            }),//console_selection_model, // defined above
             enableTextSelection: true
         });
+        console_selection_model = grid.getSelectionModel();
         console_selection_model.grid = grid;
 
         // Add it to the layout
@@ -202,9 +209,10 @@ Ext.onReady(function(){
     console_selection_model.on('rangeselect', wipeEventDetail);
 
     // Key mapping for ESC to close detail pane
-    var esckeymap = new Ext.KeyMap(document, {
-        key: Ext.EventObject.ESC,
-        fn: hideEventDetail
+    var esckeymap = new Ext.util.KeyMap({
+        key: Ext.event.Event.ESC,
+        target: document.body,
+        handler: hideEventDetail
     });
     // Start disabled since pane is collapsed
     esckeymap.disable();

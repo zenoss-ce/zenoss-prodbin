@@ -93,7 +93,7 @@ Ext.define("Zenoss.CardButtonPanel", {
             }]
         });
 
-        this.addEvents('cardchange');
+        // this.addEvents('cardchange');
         this.on('afterrender', syncButtons, this);
         this.listeners = config.listeners;
         Zenoss.CardButtonPanel.superclass.constructor.call(this, config);

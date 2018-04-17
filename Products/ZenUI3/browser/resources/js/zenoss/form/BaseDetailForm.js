@@ -175,7 +175,7 @@ Ext.define("Zenoss.form.BaseDetailForm", {
         this.form.load(o, function(result) {
             this.form.setValues(result.data);
             this.form.reset();
-            this.doLayout();
+            this.updateLayout();
         }, this);
     },
     setContext: function(uid) {

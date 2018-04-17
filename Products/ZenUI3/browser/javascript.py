@@ -176,7 +176,7 @@ class ExtAllJs(JavaScriptSrcViewlet):
 
     def update(self):
         if Globals.DevelopmentMode:
-            self.path = "/++resource++extjs/ext-all-dev.js"
+            self.path = "/++resource++extjs/ext-all-debug.js"
         else:
             self.path = "/++resource++extjs/ext-all.js"
 

@@ -219,7 +219,7 @@
                         scope: this
                     }
                 });
-                this.doLayout();
+                this.updateLayout();
 
             }
         },

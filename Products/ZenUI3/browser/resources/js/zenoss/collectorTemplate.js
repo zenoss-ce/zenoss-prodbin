@@ -35,7 +35,7 @@ Ext.onReady(function(){
 
         if ( ! Ext.getCmp(thresholdsId) ) {
             panel.add({id: thresholdsId, xtype:'thresholddatagrid'});
-            panel.doLayout();
+            panel.updateLayout();
         }
         Ext.getCmp(thresholdsId).setContext(uid);
     };
@@ -48,7 +48,7 @@ Ext.onReady(function(){
                 xtype: 'graphgrid',
                 id: graphsId
             });
-            panel.doLayout();
+            panel.updateLayout();
         }
         Ext.getCmp(graphsId).setContext(uid);
     };

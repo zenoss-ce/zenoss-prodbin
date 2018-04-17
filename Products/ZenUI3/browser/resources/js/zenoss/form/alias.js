@@ -12,7 +12,7 @@
          cmp.remove(button);
          cmp.add(getRowTemplate());
          cmp.add(addAliasButton);
-         cmp.doLayout();
+         cmp.updateLayout();
      }
 
      /**
@@ -58,7 +58,7 @@
                      var container = this.findParentByType('container'),
                          cmp = that;
                      cmp.remove(container);
-                     cmp.doLayout();
+                     cmp.updateLayout();
                  }
              }]
         };

@@ -548,7 +548,7 @@ Ext.onReady(function() {
         Ext.getCmp('manualdiscoverform', function(mdf) {
             var form = mdf.getForm();
             form.add(field);
-            mdf.doComponentLayout();
+            // mdf.doComponentLayout();
         });
         // Render the new components
         add_card();

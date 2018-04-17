@@ -43,7 +43,7 @@
                     nestedRule: scope,
                     builder: scope.getBuilder()
                 });
-                realowner.doComponentLayout();
+                // realowner.doComponentLayout();
                 clause.subject.focus();
             },
             scope: scope
@@ -67,7 +67,7 @@
                     xtype: 'nestedrule',
                     ruleBuilder: scope.getBuilder()
                 });
-                realowner.doComponentLayout();
+                // realowner.doComponentLayout();
             },
             scope: scope
         }];
@@ -252,7 +252,7 @@
                             if (typeof oldvalue !== 'undefined' && this.predicate.xtype === oldxtype) {
                                 this.predicate.setValue(oldvalue);
                             }
-                            this.doComponentLayout();
+                            // this.doComponentLayout();
                             this.getBuilder().fireEvent(
                                 'rulechange',
                                 this
@@ -319,7 +319,7 @@
                     if (pat.test(expression)) {
                         var vals = pat.exec(expression).slice(1),
                             spots = pat.exec(ZF.COMPARISONS[cmp].tpl).slice(1),
-                            sorted = Ext.zip.apply(this, Ext.zip(spots, vals).sort())[1],
+                            sorted = vals,//Ext.zip.apply(this, Ext.zip(spots, vals).sort())[1], //????
                             subject = sorted[0],
                             value = sorted[1],
                             cleansub = subject.replace(
@@ -589,7 +589,7 @@
                 this.subject_map[subject.value] = subject;
             }, this);
             this.callParent([config]);
-            this.addEvents('rulechange');
+            // this.addEvents('rulechange');
         },
         getValue: function() {
             var result = this.rootrule.getValue();
@@ -607,7 +607,7 @@
             } else {
                 this.rootrule.setValue(expression);
             }
-            this.doComponentLayout();
+            // this.doComponentLayout();
         },
         reset: function() {
             this.rootrule.clauses.removeAll();
@@ -626,7 +626,8 @@
                 config = Ext.applyIf(config || {}, {
                     queryMode: 'remote',
                     directFn: Zenoss.remote.DeviceRouter.getDeviceUuidsByName,
-                    root: 'data',
+                    // root: 'data',
+                    rootProperty: 'data',
                     model: 'Zenoss.model.BasicUUID',
                     remoteFilter: true,
                     minChars: 3,
@@ -767,7 +768,8 @@
                 },
                 fields: ['name'],
                 directFn: Zenoss.remote.DeviceRouter.getDeviceClasses,
-                root: 'deviceClasses',
+                // root: 'deviceClasses',
+                rootProperty: 'deviceClasses',
                 listeners: directStoreWorkaroundListeners,
                 typeAhead: true,
                 editable: true,
@@ -786,7 +788,8 @@
                     maxWidth:200
                 },
                 directFn: Zenoss.remote.DeviceRouter.getSystems,
-                root: 'systems',
+                // root: 'systems',
+                rootProperty: 'system',
                 fields: ['name'],
                 listeners: directStoreWorkaroundListeners,
                 typeAhead: true,
@@ -807,6 +810,7 @@
                 },
                 directFn: Zenoss.remote.DeviceRouter.getGroups,
                 root: 'groups',
+                rootProperty: 'groups',
                 fields: ['name'],
                 listeners: directStoreWorkaroundListeners,
                 typeAhead: true,

@@ -172,6 +172,10 @@
                     id: 'master_panel',
                     region: 'west',
                     layout: 'fit',
+                    /*layout: {
+                        type: 'hbox',
+                        align: 'stretch'
+                    },*/
                     width: 250,
                     split: true,
                     items: [p]
@@ -210,7 +214,7 @@
                 }]
             }
         ));
-        Ext.getCmp('center_panel').doLayout();
+        Ext.getCmp('center_panel').updateLayout();
         // expand the card panel so it can render the toolbar
         Ext.getCmp('detailCardPanel').expand();
         fb = Ext.getCmp('footer_bar');

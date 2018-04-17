@@ -64,7 +64,7 @@ function tbarButtoner(target, buttonDefs, combo, cardId, that) {
         Ext.each(tbar._btns, tbar.remove, tbar);
     }
     var btns = tbar.add(buttonDefs);
-    tbar.doLayout();
+    tbar.updateLayout();
     tbar._btns = btns;
     combo.on('select', function(c){
         if (c.value!==cardId) {
@@ -428,7 +428,7 @@ Ext.define("Zenoss.component.ComponentDetailNav", {
                     var config = this.panelConfigMap[id];
                     if(config) {
                         target.add(config);
-                        target.doLayout();
+                        target.updateLayout();
                     }
                 }
                 target.items.map[id].setContext(this.contextId);
@@ -518,7 +518,7 @@ Ext.define("Zenoss.component.ComponentPanel", {
             }]
         });
         ZC.ComponentPanel.superclass.constructor.call(this, config);
-        this.addEvents('contextchange');
+        // this.addEvents('contextchange');
     },
     getGridToolbar: function(){
         return Ext.getCmp(this.tbarid);
@@ -582,7 +582,7 @@ Ext.define("Zenoss.component.ComponentPanel", {
                     scope: this
                 }
             });
-            this.gridcontainer.doLayout();
+            this.gridcontainer.updateLayout();
             if (this.token) {
                 this.componentgrid.selectByToken(this.token);
             }

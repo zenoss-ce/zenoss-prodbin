@@ -144,7 +144,7 @@
                         Zenoss.remote.EventsRouter.add_event(
                             form.getForm().getValues(),
                             function(){
-                                addevent.hide();
+                                // addevent.hide();
                                 var grid = Ext.getCmp(gridId);
                                 grid.refresh();
                             }
@@ -360,7 +360,7 @@
         idProperty: 'id',
         fields: ['id', 'event_type']
     });
-
+/*
     Ext.define("Zenoss.form.ColumnItemSelector", {
         extend:"Ext.ux.form.ItemSelector",
         constructor: function(state_id, config) {
@@ -406,27 +406,24 @@
         margins: {top:2, left:2, right: 2, bottom:20},
         closeAction: 'destroy',
         plain: true,
-        buttons: [
-            {
-                text: _t('Submit'),
-                xtype: 'DialogButton',
-                formBind: true,
-                handler: function(){
-                    var columns = Ext.getCmp('columns_item_selector').value;
-                    var dialog = Ext.getCmp('events_column_config_dialog');
-                    var grid = dialog.grid;
+        buttons: [{
+            text: _t('Submit'),
+            xtype: 'DialogButton',
+            formBind: true,
+            handler: function(){
+                var columns = Ext.getCmp('columns_item_selector').value;
+                var dialog = Ext.getCmp('events_column_config_dialog');
+                var grid = dialog.grid;
 
-                    Zenoss.env.recreateGridWithNewColumns(grid, columns);
-                }
-            },
-            {
-                text: _t('Cancel'),
-                xtype: 'DialogButton',
-                handler: function(){
-                    this.hide();
-                }
+                Zenoss.env.recreateGridWithNewColumns(grid, columns);
             }
-        ],
+        },{
+            text: _t('Cancel'),
+            xtype: 'DialogButton',
+            handler: function(){
+                this.hide();
+            }
+        }],
         constructor: function(grid)
         {
             this.superclass.constructor.call(this, { layout: {type:'vbox', align: 'stretch'} });
@@ -463,10 +460,71 @@
             this.add(body_panel);
         }
     });
+*/
+    Zenoss.events.showColumnConfigDialog = function(grid) {
+        var cols = Zenoss.env.getColumnDefinitions();
+        var cols_to_display = Zenoss.env.getColumnIdsToRender(grid.stateId);
+        var data = [];
+        Ext.Array.each(cols, function(col) {
+            data.push([col.id, col.header]);
+        });
+        var dialog = Ext.create('Zenoss.dialog.BaseWindow', {
+            title: _t('Column Configuration'),
+            id: 'events_column_config_dialog',
+            // layout: 'anchor',
+            /*layout: {
+                type: 'hbox',
+                align: 'stretch'
+            },*/
+            grid: grid,
+            padding: 10,
+            width: 600,
+            height: 600,
+            constrain: true,
+            closeAction: 'destroy',
+            buttons: [{
+                text: _t('Submit'),
+                xtype: 'DialogButton',
+                // formBind: true,
+                handler: function(){
+                    var columns = Ext.getCmp('columns_item_selector').getValue();
+                    var dialog = Ext.getCmp('events_column_config_dialog');
+                    var grid = dialog.grid;
 
-    Zenoss.events.showColumnConfigDialog = function(grid)
-    {
-        var dialog = Ext.create('Zenoss.events.ColumnConfigDialog', grid);
+                    Zenoss.env.recreateGridWithNewColumns(grid, columns);
+                }
+            },{
+                text: _t('Cancel'),
+                xtype: 'DialogButton',
+                handler: function(){
+                    this.hide();
+                }
+            }],
+            items: [{
+                xtype: 'itemselector',
+                name: 'columnItemSelector',
+                id: 'columns_item_selector',
+                // imagePath: "/++resource++zenui/img/xtheme-zenoss/icon",
+                valueField: 'id',
+                displayField: 'name',
+                autoScroll: true,
+                // anchor: '100% 100%',
+                fromTitle: _t('Available'),
+                toTitle: _t('Selected'),
+                // minHeight:500,
+                // maxHeight:500,
+                // height:500,
+                store:  Ext.create('Ext.data.ArrayStore', {
+                    data: data,
+                    model: 'Zenoss.model.IdName',
+                    sorters: [{
+                        property: 'name',
+                        direction: 'ASC'
+                    }]
+                }),
+                value: cols_to_display
+            }]
+        });
         dialog.show();
     };
 
@@ -480,12 +538,12 @@
             historyCombo = Ext.getCmp('history_combo'),
             params = {
                 type: type,
-          options: {
-              fmt: format,
-              datefmt: Zenoss.USER_DATE_FORMAT,
-              timefmt: Zenoss.USER_TIME_FORMAT,
-              tz: Zenoss.USER_TIMEZONE 
-          },
+                options: {
+                    fmt: format,
+                    datefmt: Zenoss.USER_DATE_FORMAT,
+                    timefmt: Zenoss.USER_TIME_FORMAT,
+                    tz: Zenoss.USER_TIMEZONE
+                },
                 isHistory: false,
                 params: {
                     uid: context,
@@ -511,6 +569,7 @@
                 configureMenuItems,
                 tbarItems = config.tbarItems || [],
                 eventSpecificTbarActions = ['acknowledge', 'close', 'reopen', 'unacknowledge', 'addNote'];
+
             if (!gridId) {
                 throw ("Event console tool bar did not receive a grid id");
             }
@@ -652,7 +711,9 @@
                         if (!uid) {
                             uid = '/zport/dmd/Devices';
                         }
-                        var me = Ext.getCmp('event-commands-menu'),
+                        var me = this;//Ext.getCmp('event-commands-menu'),
+                        // menu = me.menu;
+                        me.setMenu({plain:true});
                         menu = me.menu;
                         // load the available commands from the server
                         // commands are based on context
@@ -1003,11 +1064,12 @@
                                        ]
                             }),
                             listeners: {'select': function (combo, record){
-                                if(record[0].data.id == "unix"){
+                                var id = record && record.get('id');
+                                if(id == "unix"){
                                     Ext.getCmp('fexample').setValue(moment.tz(new Date(), Zenoss.USER_TIMEZONE).format("x")).show();
-                                } else if(record[0].data.id == "iso"){
+                                } else if(id == "iso"){
                                     Ext.getCmp('fexample').setValue(moment.tz(new Date(), Zenoss.USER_TIMEZONE).format("YYYY-MM-DDTHH:mm:ssZ")).show();
-                                } else if(record[0].data.id == "user"){
+                                } else if(id == "user"){
                                     Ext.getCmp('fexample').setValue(moment.tz(new Date(), Zenoss.USER_TIMEZONE).format(Zenoss.USER_DATE_FORMAT + ' ' + Zenoss.USER_TIME_FORMAT)).show();
                                 }
                             }
@@ -1097,15 +1159,15 @@
             badIds: {},
             mode: 'MULTI',
             constructor: function(config){
-                this.callParent([config]);
+                this.callParent(arguments);
                 this.on('select', this.handleRowSelect, this);
                 this.on('deselect', this.handleRowDeSelect, this);
-                this.on('selectionchange', function(selectionmodel) {
+                this.on('selectionchange', function(selectionmodel, selection) {
                     // Disable buttons if nothing selected (and vice-versa)
                     var actionsToChange = ['acknowledge', 'close', 'reopen',
                                            'unacknowledge', 'classify',
                                            'addNote', 'event-actions-menu'],
-                        newDisabledValue = !selectionmodel.hasSelection() && selectionmodel.selectState !== 'All',
+                        newDisabledValue = (!selection || !selection.length) && selectionmodel.selectState !== 'All',
                         tbar = this.getGrid().tbar,
                         history_combo = Ext.getCmp('history_combo'),
                         archive = Ext.isDefined(history_combo) ? history_combo.getValue() === 1 : false;
@@ -1270,7 +1332,8 @@
                     directFn: config.directFn || Zenoss.remote.EventsRouter.query,
                     reader: {
                         type: 'events',
-                        root: 'events',
+                        // root: 'events',
+                        rootProperty: 'events',
                         totalProperty: 'totalCount'
                     }
                 }
@@ -1311,7 +1374,7 @@
             config.viewConfig = config.viewConfig || {};
             Ext.applyIf(config.viewConfig, {
                 getRowClass: Zenoss.events.getRowClass,
-        enableTextSelection: true
+                enableTextSelection: true
             });
 
             this.callParent(arguments);
@@ -1321,7 +1384,7 @@
             this.getStore().autoLoad = true;
         },
         initComponent: function() {
-            this.getSelectionModel().grid = this;
+            // this.getSelectionModel().grid = this;
              // create keyboard shortcuts for the main event console
             function nonInputHandler(func, scope){
 
@@ -1335,7 +1398,7 @@
             this.map = new Ext.util.KeyMap({
                 target: document.body,
                 binding: [{
-                    key:  Ext.EventObject.A,
+                    key:  Ext.event.Event.A,
                     ctrl: true,
                     shift: false,
                     alt: false,
@@ -1344,7 +1407,7 @@
                         this.getSelectionModel().selectEventState('All');
                     }, this)
                 },{
-                    key:  Ext.EventObject.ESC,
+                    key:  Ext.event.Event.ESC,
                     ctrl: false,
                     shift: false,
                     alt: false,
@@ -1355,7 +1418,7 @@
                     }, this)
                 }, {
                     // acknowledge
-                    key: Ext.EventObject.A,
+                    key: Ext.event.Event.A,
                     shift: true,
                     ctrl: true,
                     alt: false,
@@ -1364,7 +1427,7 @@
                     }, this)
                 }, {
                     // close
-                    key: Ext.EventObject.C,
+                    key: Ext.event.Event.C,
                     shift: true,
                     ctrl: true,
                     alt: false,
@@ -1373,7 +1436,7 @@
                     }, this)
                 }, {
                     // reopen
-                    key: Ext.EventObject.O,
+                    key: Ext.event.Event.O,
                     shift: true,
                     ctrl: true,
                     alt: false,
@@ -1382,7 +1445,7 @@
                     }, this)
                 }, {
                     // unack
-                    key: Ext.EventObject.U,
+                    key: Ext.event.Event.U,
                     shift: true,
                     ctrl: true,
                     alt: false,
@@ -1643,7 +1706,7 @@
              * Fires when the events grid is refreshed.
              * @param {Zenoss.SimpleEventGridPanel} this The gridpanel.
              */
-            this.addEvents('eventgridrefresh');
+            // this.addEvents('eventgridrefresh');
         },
         /**
          *Since on a regular event console you can not choose which columns

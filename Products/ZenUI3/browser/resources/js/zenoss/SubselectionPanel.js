@@ -28,9 +28,9 @@
                             this.renderItem(card, index, C.getLayoutTarget());
                         }
                         card.show();
-                        if (card.doLayout && (this.layoutOnCardChange ||
+                        if (card.updateLayout && (this.layoutOnCardChange ||
                             !card.rendered)) {
-                            card.doLayout();
+                            card.updateLayout();
                         }
                         var _done = 0;
 
@@ -142,8 +142,8 @@
             Zenoss.HorizontalSlidePanel.superclass.constructor.call(this, config);
         },
         initEvents:function () {
-            this.addEvents('beforecardchange');
-            this.addEvents('cardchange');
+            // this.addEvents('beforecardchange');
+            // this.addEvents('cardchange');
             Zenoss.HorizontalSlidePanel.superclass.initEvents.call(this);
         }
     });
@@ -180,7 +180,7 @@
         all:null,
         constructor:function () {
             this.all = new Zenoss.NavConfig();
-            this.all.addEvents('navready');
+            // this.all.addEvents('navready');
         },
         /**
          * Register a nav item tree. See `Zenoss.NavConfig` for item structure.
@@ -380,7 +380,8 @@
         fields:Zenoss.model.BASE_TREE_FIELDS.concat([
             {
                 name:'action',
-                type:'function'
+                // type:'function'
+                type:'auto'
             }
         ])
     });
@@ -501,28 +502,28 @@
             Zenoss.DetailNavPanel.superclass.constructor.call(this, config);
         },
         initEvents:function () {
-            this.addEvents(
+            // this.addEvents(
                 /**
                  * @event navloaded
                  * Fires after the navigation has been loaded
                  * @param {DetailNavPanel} this The DetailNavPanel
                  * @param {AsyncTreeNode} root The root node
                  */
-                'navloaded',
+                // 'navloaded',
                 /*
                  * @event nodeloaded
                  * Fires after each navigation node has been loaded
                  * @param {DetailNavPanel} this The DetailNavPanel
                  * @param {Object} The Navigation config loaded
                  */
-                'nodeloaded',
+                // 'nodeloaded',
                 /**
                  * @event contextchange
                  * Fires after the navigation has been loaded
                  * @param {DetailNavPanel} this The DetailNavPanel
                  */
-                'contextchange'
-            );
+                // 'contextchange'
+            // );
             Zenoss.DetailNavPanel.superclass.initEvents.call(this);
             if (this.selectFirstNode) {
                 this.on('navloaded', this.selectFirst, this);
@@ -642,7 +643,7 @@
             if (!selectionModel.getLastSelected()) {
                 selectionModel.select(0);
             };
-            this.doLayout();
+            this.updateLayout();
 
 
         }
@@ -696,7 +697,7 @@
                     if (!(id in target.items.map)) {
                         if (config) {
                             target.add(config);
-                            target.doLayout();
+                            target.updateLayout();
                         }
                     }
                     target.items.map[id].setContext(this.contextUid);
@@ -769,7 +770,7 @@
                 this.displayField = 'text';
                 this.list = null;
                 this.bindStore(this.store);
-                this.doComponentLayout();
+                // this.doComponentLayout();
                 // "sticky" menu selection, show same item as was shown for last context
                 if (hasItem) {
                     this.selectByItem(this.lastSelItem);

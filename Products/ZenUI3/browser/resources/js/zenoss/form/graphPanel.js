@@ -615,14 +615,14 @@
         },
         initEvents: function() {
             Zenoss.EuropaGraph.superclass.initEvents.call(this);
-            this.addEvents(
+            // this.addEvents(
                 /**
                  * @event updateimage
                  * Fire this event to force the chart to redraw itself.
                  * @param {object} params The parameters we are sending to the object.
                  **/
-                'updateimage'
-            );
+                // 'updateimage'
+            // );
             this.on('updateimage', this.updateGraph, this);
             this.graphEl = Ext.get(this.graphId);
         },

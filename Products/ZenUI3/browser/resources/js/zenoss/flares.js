@@ -137,7 +137,7 @@
                 });
             }
             Zenoss.flares.Manager.container.add(flare);
-            Zenoss.flares.Manager.container.doLayout();
+            Zenoss.flares.Manager.container.updateLayout();
             flare.show();
         },
         removeFlare: function(flare) {
@@ -367,7 +367,7 @@
             });
             Ext.apply(this, config);
             this.callParent([config]);
-            this.addEvents('message');
+            // this.addEvents('message');
         },
         init: function() {
             this._task = new Ext.util.DelayedTask(function(){

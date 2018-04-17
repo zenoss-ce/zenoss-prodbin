@@ -7,7 +7,7 @@ Ext.ns('Zenoss');
  */
 Ext.define("Zenoss.SearchField", {
     extend: "Ext.form.TextField",
-    alias: ['widget.searchfield'],
+    alias: ['widget.searchfield2'],
     constructor: function(config){
         config = Ext.applyIf(config||{}, {
             validationDelay: 500,
@@ -34,5 +34,3 @@ Ext.define("Zenoss.SearchField", {
     }
 
 }); // Ext.extend
-
-

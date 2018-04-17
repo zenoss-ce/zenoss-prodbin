@@ -95,7 +95,7 @@ Zenoss.SwoopyGraph = Ext.extend(Ext.Panel, {
         Zenoss.SWOOPIES.push(this);
     },
     initEvents: function() {
-        this.addEvents("zoommodechange", "updateimage");
+        // this.addEvents("zoommodechange", "updateimage");
         Zenoss.SwoopyGraph.superclass.initEvents.call(this);
         this.on("zoommodechange", this.onZoomModeChange, this);
         this.on("updateimage", this.updateImage, this);

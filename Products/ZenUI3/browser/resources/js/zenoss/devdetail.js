@@ -208,7 +208,7 @@ function showMonitoringDialog() {
         }]
     });
     win.show();
-    win.doLayout();
+    win.updateLayout();
 
 }
 
@@ -327,7 +327,7 @@ var componentCard = {
         ui: 'none',
         width: 175,
         items: [{
-                    xtype: 'searchfield',
+                    xtype: 'searchfield2',
                     id: 'component_searchfield',
                     validateOnBlur: false,
                     emptyText: _t('Type to filter...'),
@@ -508,7 +508,7 @@ Ext.define('Zenoss.DeviceDetailNav', {
                 scope: this
             }
         });
-        this.addEvents('componenttreeloaded');
+        // this.addEvents('componenttreeloaded');
         this.callParent([config]);
         if (Zenoss.settings.showPageStatistics){
             Ext.create('Zenoss.stats.DeviceDetail');
@@ -590,17 +590,17 @@ Ext.define('Zenoss.DeviceDetailNav', {
         }
         tree.on('afteritemcollapse', function(){
             Ext.defer(function(){
-                Ext.getCmp('master_panel').doLayout();
+                Ext.getCmp('master_panel').updateLayout();
             }, 300);
         });
         tree.on('afteritemexpand', function(){
             Ext.defer(function(){
-                Ext.getCmp('master_panel').doLayout();
+                Ext.getCmp('master_panel').updateLayout();
             }, 300);
         });
         tree.on('afterrender', function(){
             Ext.defer(function(){
-                Ext.getCmp('master_panel').doLayout();
+                Ext.getCmp('master_panel').updateLayout();
             }, 300);
         });
         this.fireEvent('componenttreeloaded');
@@ -693,7 +693,7 @@ Ext.define('Zenoss.DeviceDetailNav', {
                     var config = this.panelConfigMap[id];
                     if(config) {
                         target.add(config);
-                        target.doLayout();
+                        target.updateLayout();
                     }
                 }
                 target.items.map[id].setContext(this.contextId);
@@ -799,7 +799,8 @@ var editDeviceClass = function(deviceClass, uid) {
             fieldLabel: _t('Select a device class'),
             store: new Zenoss.NonPaginatedStore({
                 directFn: Zenoss.remote.DeviceRouter.getDeviceClasses,
-                root: 'deviceClasses',
+                // root: 'deviceClasses',
+                rootProperty: 'deviceClasses',
                 fields: ['name']
             }),
             valueField: 'name',
@@ -890,7 +891,7 @@ var editDeviceClass = function(deviceClass, uid) {
     });
 
     win.show();
-    win.doLayout();
+    win.updateLayout();
 };
 
 
@@ -1059,7 +1060,7 @@ Ext.getCmp('footer_bar').add([{
                 }]
             });
             win.show();
-            win.doLayout();
+            win.updateLayout();
         }
     },{
         xtype: 'menuitem',

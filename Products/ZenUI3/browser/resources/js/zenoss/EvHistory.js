@@ -32,8 +32,8 @@ Ext.onReady(function(){
                     params: grid.getExportParameters()
                 }
             };
-        Ext.get('export_body').dom.value =
-        Ext.encode(params);
+
+        Ext.get('export_body').dom.value = Ext.encode(params);
         Ext.get('exportform').dom.submit();
 
     };
@@ -42,7 +42,7 @@ Ext.onReady(function(){
     var detail_panel = Ext.getCmp('detail_panel');
     var master_panel = Ext.getCmp('master_panel');
 
-    master_panel.layout = 'border';
+    // master_panel.layout = 'border';
 
     // Make this instance of the detail panel use a unique state ID so
     // it doesn't interfere with the state of other instances of this panel.
@@ -161,11 +161,12 @@ Ext.onReady(function(){
                                        ]
                             }),
                             listeners: {'select': function (combo, record){
-                                if(record[0].data.id == "unix"){
+                                var id = record && record.get('id');
+                                if(id == "unix"){
                                     Ext.getCmp('fexample').setValue(moment.tz(new Date(), Zenoss.USER_TIMEZONE).format("x")).show();
-                                } else if(record[0].data.id == "iso"){
+                                } else if(id == "iso"){
                                     Ext.getCmp('fexample').setValue(moment.tz(new Date(), Zenoss.USER_TIMEZONE).format("YYYY-MM-DDTHH:mm:ssZ")).show();
-                                } else if(record[0].data.id == "user"){
+                                } else if(id == "user"){
                                     Ext.getCmp('fexample').setValue(moment.tz(new Date(), Zenoss.USER_TIMEZONE).format(Zenoss.USER_DATE_FORMAT + ' ' + Zenoss.USER_TIME_FORMAT)).show();
                                 }
                             }
@@ -294,8 +295,8 @@ Ext.onReady(function(){
     };
 
     // Selection model
-    var console_selection_model = new Zenoss.EventPanelSelectionModel({
-    });
+    var console_selection_model;/* = new Zenoss.EventPanelSelectionModel({
+    });*/
 
     var createEventHistoryGrid = function ()
     {
@@ -329,13 +330,16 @@ Ext.onReady(function(){
             // Map some other keys
             keys: [{
                 // Enter to pop open the detail panel
-                key: Ext.EventObject.ENTER,
+                key: Ext.event.Event.ENTER,
                 fn: toggleEventDetailContent
             }],
             displayTotal: false,
-            selModel: console_selection_model // defined above
+            selModel: new Zenoss.EventPanelSelectionModel({
+                gridId: 'events_grid'
+            }) // defined above
 
         });
+        console_selection_model = grid.getSelectionModel();
         console_selection_model.grid = grid;
 
         // Add it to the layout
@@ -450,10 +454,11 @@ Ext.onReady(function(){
         detail_panel.collapse();
     });
 
-    // Key mapping for ESC to close detail pane
-    var esckeymap = new Ext.KeyMap(document, {
-        key: Ext.EventObject.ESC,
-        fn: hideEventDetail
+    // Key mapping for ESC to close detail panel
+    var esckeymap = new Ext.util.KeyMap({
+        key: Ext.event.Event.ESC,
+        target: document.body,
+        handler: hideEventDetail
     });
 
     // Start disabled since pane is collapsed
