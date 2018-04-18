@@ -170,9 +170,6 @@ Ext.onReady(function(){
                     tree.refresh();
                     tree.getStore().on('load', function(){
                         var node = tree.getRootNode().findChild("uid", parentNode, true);
-                        console.log('!!!!!!', tree, node);
-                        window.ttt = tree;
-                        window.nnn= node;
                         tree.expandToChild(node);
                         tree.getView().select(node);
                     }, this, {single:true});

@@ -272,7 +272,8 @@
      * Store for our configuration properties grid
      **/
     Ext.define("Zenoss.ConfigProperty.Store", {
-        extend: "Zenoss.DirectStore",
+        // extend: "Zenoss.DirectStore",
+        extend: "Zenoss.DirectBufferedStore",
         constructor: function(config) {
             config = config || {};
             Ext.applyIf(config, {

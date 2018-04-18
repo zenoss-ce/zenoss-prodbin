@@ -152,8 +152,7 @@
                 stateId: config.id || 'overridden_grid2',
                 sm: Ext.create('Zenoss.SingleRowSelectionModel', {}),
                 stateful: true,
-                tbar:[
-                    {
+                tbar:[{
                     xtype: 'button',
                     iconCls: 'customize',
                     tooltip: _t('Edit selected Configuration Property value'),
@@ -181,8 +180,7 @@
                             data = selected[0].data;
                             showEditCustPropertyDialog(data, grid);
                         }
-                    },
-                    {
+                },{
                     xtype: 'combo',
                     width:350,
                     fieldLabel: 'Configuration Properties',
@@ -195,8 +193,7 @@
                         maxWidth:300
                     },
                     store: ['none']
-                    }
-                ],
+                }],
                 store: Ext.create('Ext.data.ArrayStore', {
                       fields: [
                           {name: 'devicelink'},
@@ -232,7 +229,7 @@
             this.uid = uid;
             var combo = Ext.getCmp('propsCombo');
             // load the grid's store
-            this.callParent(arguments);
+            // this.callParent(arguments); // ???
             Zenoss.remote.DeviceRouter.getOverriddenZprops({uid:uid}, function(response){
                 if (response.success) {
                     setComboFromData(response, combo);
@@ -247,6 +244,7 @@
                 }
             });
             checkComboIndex();
+            this.fireEvent('contextchange', this, uid);
         },
         refresh: function(){
             var uid = Ext.getCmp('overriddenobjbase_grid1').uid;
@@ -324,10 +322,10 @@
             this.on('itemdblclick', this.onRowDblClick, this);
             this.on('select', this.onSelectRow, this);
         },
-        setContext: function(uid) {
+        setContext: function(uid) { //TOD:???
             this.uid = uid;
             // load the grid's store
-            this.callParent(arguments);
+            // this.callParent(arguments);
         },
         refresh: function(){
             var uid = Ext.getCmp('overriddenobjbase_grid1').uid;

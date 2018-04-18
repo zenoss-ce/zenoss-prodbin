@@ -781,8 +781,8 @@
                                 yesterday = new Date();
 
                             // reload the grid. changing the filters
-                            grid.setStoreParameter('archive', archive);
-
+                            // grid.setStoreParameter('archive', archive);
+                            grid.getStore().setBaseParam('archive', archive);
                             // if history set default lastseen to yesterday
                             if (archive) {
                                 yesterday.setDate(yesterday.getDate() - 1);
@@ -1251,13 +1251,13 @@
             clearSelectState: function() {
                 this.selectState = null;
                 this.grid.getStore().un('datachanged', this.onStoreLoad, this);
-                this.grid.disableSavedSelection(false);
+                // this.grid.disableSavedSelection(false);
             },
             setSelectState: function(state) {
                 this.selectState = state;
                 if (state === 'All') {
                     this.grid.getStore().on('datachanged', this.onStoreLoad, this);
-                    this.grid.disableSavedSelection(true);
+                    // this.grid.disableSavedSelection(true);
                 }
             },
             selectNone: function(){
@@ -1318,7 +1318,8 @@
      * Direct store for loading ip addresses
      */
     Ext.define("Zenoss.events.Store", {
-        extend: "Zenoss.DirectStore",
+        // extend: "Zenoss.DirectStore",
+        extend: 'Zenoss.DirectBufferedStore',
         constructor: function(config) {
             config = config || {};
             Ext.applyIf(config, {

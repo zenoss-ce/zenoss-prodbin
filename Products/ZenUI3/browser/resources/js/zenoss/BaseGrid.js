@@ -33,6 +33,70 @@
         }
     });
 
+    /**
+     * Base class for non paginated and paginated stores.
+     * @class Zenoss.Store
+     */
+    Ext.define('Zenoss.StoreBase', {
+
+        setBaseParam: function(key, value) {
+            var proxy = this.getProxy(),
+                params = key;
+            if (typeof params === 'string') {
+                params = {};
+                params[key] = value;
+            }
+            Ext.apply(proxy.extraParams, params);
+        },
+        setParamsParam: function(key, value) {
+            var proxy = this.getProxy(),
+                params = key;
+
+            if (typeof params === 'string') {
+                params = {};
+                params[key] = value;
+            }
+            if (!proxy.extraParams.params) {
+                proxy.extraParams.params = {};
+            }
+            Ext.apply(proxy.extraParams.params, params);
+        }
+    });
+
+     Ext.define('Zenoss.DirectBufferedStore', { //TODO: test this in grids;
+         mixins: ['Zenoss.StoreBase'],
+         extend: 'Ext.data.BufferedStore',
+         alias: 'store.zendirectbufferedstore',
+
+         remoteSort: true,
+         pageSize: 50,
+
+         constructor: function (config) {
+            config = config || {};
+            var sorters;
+            if (config.initialSortColumn) {
+                sorters = [{
+                    property: config.initialSortColumn,
+                    direction: config.initialSortDirection || 'ASC'
+                }];
+            }
+            Ext.applyIf(config, {
+                sorters: sorters,
+                proxy: {
+                    type: 'direct',
+                    simpleSortMode: true,
+                    directFn: config.directFn,
+                    extraParams: config.baseParams || {},
+                    reader: {
+                        rootProperty: config.root || config.rootProperty || 'data',
+                        totalProperty: config.totalProperty || 'totalCount'
+                    }
+                }
+            });
+            this.callParent(arguments);
+         }
+     });
+
 
 
     /**
@@ -46,12 +110,10 @@
             config = config || {};
             var sorters;
             if (config.initialSortColumn) {
-                sorters = [
-                    {
-                        property: config.initialSortColumn,
-                        direction: config.initialSortDirection || 'ASC'
-                    }
-                ];
+                sorters = [{
+                    property: config.initialSortColumn,
+                    direction: config.initialSortDirection || 'ASC'
+                }];
             }
             Ext.applyIf(config, {
                 remoteSort: true,
@@ -110,8 +172,7 @@
                     sorters: [{
                         property: config.initialSortColumn || undefined,
                         direction: config.initialSortDirection || 'ASC'
-                    }
-                    ]
+                    }]
                 });
             }
             this.callParent(arguments);
@@ -629,7 +690,7 @@
                 viewConfig: viewConfig
             });
             this.callParent([config]);
-            var after_request = function () {
+            /*var after_request = function () {
                 if (!this._disableSavedSelection) {
                     this.applySavedSelection();
                 }
@@ -669,7 +730,7 @@
                 this.getStore().on('beforeload', before_request, this);
                 this.getStore().on("load", after_request, this);
             }
-
+*/
             // this.addEvents(
                 /**
                  * @event beforeactivate
@@ -680,7 +741,7 @@
                 // 'contextchange'
             // );
         },
-        saveSelection: function () {
+        /*saveSelection: function () { // XXX-remove this later
             this.selectedNodes = null;//this.getSelectionModel().getSelection();
         },
         disableSavedSelection: function (bool) {
@@ -711,7 +772,7 @@
         },
         clearSavedSelections: function () {
             this.selectedNodes = [];
-        },
+        },*/
         applyOptions: function (options) {
             // Do nothing in the base implementation
         },
@@ -719,18 +780,20 @@
          * This will add a parameter to be sent
          * back to the server on every request for this store.
          **/
-        setStoreParameter: function (name, value) {
+        /*setStoreParameter: function (name, value) {
             var store = this.getStore();
             if (!store.proxy.extraParams) {
                 store.proxy.extraParams = {};
             }
             store.proxy.extraParams[name] = value;
-        },
+        },*/
         setContext: function (uid) {
+            var store = this.getStore();
             this.uid = uid;
-            this.setStoreParameter('uid', uid);
+            // this.setStoreParameter('uid', uid);
+            store.setBaseParam('uid', uid);
             this.fireEvent('contextchange', this, uid);
-            this.getStore().load();
+            store.load();
         },
         getContext: function () {
             return this.uid;
@@ -740,7 +803,7 @@
             if (!this.getContext()) {
                 return;
             }
-            this.saveSelection();
+            // this.saveSelection();
             this.getStore().load();
         }
     });
@@ -780,13 +843,13 @@
 
             this.refresh_in_progress = 0;
 
-            if (this.getStore().buffered) {
-                this.getStore().on('beforeprefetch', this.before_request, this);
-                this.getStore().on("afterguaranteedrange", this.after_request, this);
-            } else {
+            // if (this.getStore().buffered) {
+            //     this.getStore().on('beforeprefetch', this.before_request, this);
+            //     this.getStore().on("afterguaranteedrange", this.after_request, this);
+            // } else {
                 this.getStore().on('beforeload', this.before_request, this);
                 this.getStore().on("load", this.after_request, this);
-            }
+            // }
 
             var paging_tb = this.down('pagingtoolbar');
             if (paging_tb) {
@@ -847,7 +910,7 @@
             if (!this.getContext()) {
                 return;
             }
-            this.saveSelection();
+            // this.saveSelection();
             var store = this.getStore();
 
             if (!store.buffered || store.totalCount < store.pageSize) {
