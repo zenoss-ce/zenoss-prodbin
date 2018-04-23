@@ -31,7 +31,8 @@ Ext.define("Zenoss.AddToZenPackWindow", {
             width: 310,
             plain: true,
             items: [{
-                id: 'addzenpackform',
+                // id: 'addzenpackform',
+                itemId: 'addzenpackform',
                 xtype: 'form',
                 listeners: {
                     validitychange: function(form, isValid) {
@@ -57,7 +58,7 @@ Ext.define("Zenoss.AddToZenPackWindow", {
                         resizable: true
                     },
                     store: new Zenoss.NonPaginatedStore({
-                        id: 'myzpstore',
+                        // id: 'myzpstore',
                         root: 'packs',
                         model: 'Zenoss.model.Name',
                         totalProperty: 'totalCount',
@@ -68,14 +69,16 @@ Ext.define("Zenoss.AddToZenPackWindow", {
                     forceSelection: true,
                     triggerAction: 'all',
                     selectOnFocus: true,
-                    id: 'zpcombobox'
+                    itemId: 'zpcombobox'
+                    // id: 'zpcombobox'
                 }],
                 buttons: [{
                     text: _t('Submit'),
                     xtype: 'DialogButton',
                     disabled: true,
-                    handler: function () {
-                        var form = Ext.getCmp('addzenpackform'),
+                    handler: function (t) {
+                        var // form = Ext.getCmp('addzenpackform'),
+                            form = t.up('#addzenpackform'),
                             chosenzenpack = form.getForm().findField('zpname').getValue(), i, targets = [], callback;
                         if (!Ext.isArray(me.target)) {
                             targets.push(me.target);

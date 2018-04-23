@@ -383,10 +383,11 @@ Zenoss.EventActionManager.configure({
 });
 
     var createDevDetailEventsGrid = function(re_attach_to_container){
-        var dev_detail_store = Ext.create('Zenoss.events.Store', {});
+        /*var dev_detail_store = Ext.create('Zenoss.events.BufferedStore', {});
         if (!Zenoss.settings.enableInfiniteGridForEvents) {
             dev_detail_store.buffered = false;
-        }
+        }*/
+        var dev_detail_store = Zenoss.getEventStore();
         var event_console = Ext.create('Zenoss.EventGridPanel', {
             id: 'device_events',
             stateId: 'device_events',

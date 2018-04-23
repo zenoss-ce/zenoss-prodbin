@@ -178,7 +178,6 @@
             Zenoss.eventclasses.mappingDialog(grid, data);
         };
 
-
         var win = new Zenoss.dialog.BaseWindow({
             title: _t('Classify Events'),
             id: 'reclassify_events_window',
@@ -850,7 +849,8 @@
                         tbar = this,
                         view = grid.getView();
                         if(store.buffered) {
-                            store.on('guaranteedrange', this.doLastUpdated);
+                            // store.on('guaranteedrange', this.doLastUpdated);
+                            store.on('prefetch', this.doLastUpdated);
                         } else {
                             store.on('load', this.doLastUpdated);
                         }
@@ -1262,7 +1262,9 @@
             },
             selectNone: function(){
                 this.clearSelections(true);
-                this.clearSelectState();
+                if (this.clearSelectState) { //TODO:??
+                    this.clearSelectState();
+                }
                 // Fire one selectionchange to make buttons figure out their
                 // disabledness
                 this.fireEvent('selectionchange', this);
@@ -1317,7 +1319,31 @@
      * @extend Zenoss.DirectStore
      * Direct store for loading ip addresses
      */
-    Ext.define("Zenoss.events.Store", {
+    Zenoss.getEventStore = function(config) {
+        var storeConfigs = Ext.applyIf((config || {}), {
+            model: 'Zenoss.events.Model',
+            initialSortColumn: 'severity',
+            initialSortDirection: 'DESC',
+            pageSize: Zenoss.settings.eventConsoleBufferSize,
+            proxy: {
+                type: 'direct',
+                simpleSortMode: true,
+                directFn: Zenoss.remote.EventsRouter.query,
+                reader: {
+                    type: 'events',
+                    // root: 'events',
+                    rootProperty: 'events',
+                    totalProperty: 'totalCount'
+                }
+            }
+        });
+        if (Zenoss.settings.enableInfiniteGridForEvents) {
+            return Ext.create("Zenoss.DirectBufferedStore", storeConfigs);
+        } else {
+            return Ext.create("Zenoss.DirectStore", storeConfigs);
+        }
+    };
+    /*Ext.define("Zenoss.events.Store", {
         // extend: "Zenoss.DirectStore",
         extend: 'Zenoss.DirectBufferedStore',
         constructor: function(config) {
@@ -1338,12 +1364,10 @@
                         totalProperty: 'totalCount'
                     }
                 }
-
-
             });
             this.callParent(arguments);
         }
-    });
+    });*/
 
     Zenoss.events.customColumns = {};
     Zenoss.events.registerCustomColumn = function(dataIndex, obj) {
@@ -1375,7 +1399,7 @@
             config.viewConfig = config.viewConfig || {};
             Ext.applyIf(config.viewConfig, {
                 getRowClass: Zenoss.events.getRowClass,
-                enableTextSelection: true
+                enableTextSelection: true //???
             });
 
             this.callParent(arguments);
@@ -1384,7 +1408,7 @@
             this.excludeNonActionables = !_global_permissions()['manage events'] && Ext.state.Manager.get('excludeNonActionables');
             this.getStore().autoLoad = true;
         },
-        initComponent: function() {
+        initComponent: function() { //TODO: change disabled state of buttons
             // this.getSelectionModel().grid = this;
              // create keyboard shortcuts for the main event console
             function nonInputHandler(func, scope){
@@ -1405,7 +1429,7 @@
                     alt: false,
                     scope: this,
                     fn: nonInputHandler(function() {
-                        this.getSelectionModel().selectEventState('All');
+                        this.selectAll();
                     }, this)
                 },{
                     key:  Ext.event.Event.ESC,
@@ -1414,10 +1438,14 @@
                     alt: false,
                     scope:this,
                     fn: nonInputHandler(function() {
-                        this.getSelectionModel().clearSelections();
-                        this.getSelectionModel().clearSelectState();
+                        var sm = this.getSelectionModel();
+                        // sm.clearSelections(); // ???
+                        sm.deselectAll();
+                        if (sm.clearSelectState) { //TODO:??
+                            sm.clearSelectState();
+                        }
                     }, this)
-                }, {
+                },{
                     // acknowledge
                     key: Ext.event.Event.A,
                     shift: true,
@@ -1426,7 +1454,7 @@
                     fn: nonInputHandler(function() {
                         Zenoss.EventActionManager.execute(Zenoss.remote.EventsRouter.acknowledge);
                     }, this)
-                }, {
+                },{
                     // close
                     key: Ext.event.Event.C,
                     shift: true,
@@ -1462,7 +1490,10 @@
             this.callParent(arguments);
         },
         onItemClick: function(){
-            this.getSelectionModel().clearSelectState();
+            var sm = this.getSelectionModel();
+            if (sm.clearSelectState) { //TODO:??
+                sm.clearSelectState();
+            }
         },
         setGetFilterParameters: function() {
             var params = Ext.Object.fromQueryString(location.search),
@@ -1572,8 +1603,12 @@
         onFiltersChanged: function(grid) {
             // ZEN-4441: Clear selections whenever the filter changes.
             var sm = grid.getSelectionModel();
-            sm.clearSelections();
-            sm.clearSelectState();
+            // sm.clearSelections(); // ???
+            sm.deselectAll();
+            if (sm.clearSelectState) { //TODO:??
+                sm.clearSelectState();
+            }
+            sm.deselectAll();
         },
         /*
          * Create parameters used for exporting events. This differs from
@@ -1677,11 +1712,17 @@
                 enableDragDrop: false,
                 stateful: true,
                 rowSelectorDepth: 5,
-                store: Ext.create('Zenoss.events.Store', {}),
+                // store: Ext.create('Zenoss.events.BufferedStore', {}),
+                store: Zenoss.getEventStore(),
                 appendGlob: true,
-                selModel: new Zenoss.EventPanelSelectionModel({
+                selModel: {
+                    selType: 'rowmodel',
+                    mode: 'MULTI',
+                    pruneRemoved: false
+                },
+                /*selModel: new Zenoss.EventPanelSelectionModel({
                     grid: this
-                }),
+                }),*/
                 defaultFilters: {
                     severity: [Zenoss.SEVERITY_CRITICAL, Zenoss.SEVERITY_ERROR, Zenoss.SEVERITY_WARNING, Zenoss.SEVERITY_INFO],
                     eventState: [Zenoss.STATUS_NEW, Zenoss.STATUS_ACKNOWLEDGED]
@@ -1740,20 +1781,24 @@
             items: [{
                 text: _t("All"),
                 tooltip: _t('Ctrl-a'),
-                handler: function(){
-                    var grid = Ext.getCmp('select-button').ownerCt.ownerCt,
-                    sm = grid.getSelectionModel();
-                    sm.selectEventState('All');
-                    sm.setSelectState("All");
+                handler: function(t){
+                    var grid = t.up('grid');
+                    grid.selectAll();
+                    // sm = grid.getSelectionModel();
+                    // sm.selectEventState('All');
+                    // sm.setSelectState("All");
                 }
             },{
                 text: 'None',
                 tooltip: _t('Esc'),
-                handler: function(){
-                    var grid = Ext.getCmp('select-button').ownerCt.ownerCt,
+                handler: function(t){
+                    var grid = t.up('grid'),
                     sm = grid.getSelectionModel();
-                    sm.clearSelections();
-                    sm.clearSelectState();
+                    // sm.clearSelections(); //??
+                    sm.deselectAll();
+                    if (sm.clearSelectState) { //TODO:??
+                        sm.clearSelectState();
+                    }
                 }
             }]
         }
@@ -1772,7 +1817,7 @@
                     commandsMenu: config.commandsMenu
                 })
             });
-            Zenoss.EventGridPanel.superclass.constructor.call(this, config);
+            this.callParent([config]);
         },
         onRowDblClick: function(view, record) {
             var evid = record.get('evid'),

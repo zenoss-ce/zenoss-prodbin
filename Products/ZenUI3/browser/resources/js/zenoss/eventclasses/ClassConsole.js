@@ -287,7 +287,8 @@ Ext.onReady(function(){
                 newwindowBtn: true,
                 actionsMenu: false,
                 commandsMenu: false,
-                store: Ext.create('Zenoss.events.Store', {})
+                // store: Ext.create('Zenoss.events.BufferedStore', {})
+                store: Zenoss.getEventStore()
             }]
         }]
     });

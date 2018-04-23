@@ -86,18 +86,22 @@ Ext.onReady(function(){
                     items: [{
                         text: 'All',
                         handler: function(){
-                            var grid = Ext.getCmp('events_grid'),
-                            sm = grid.getSelectionModel();
-                            sm.selectEventState('All');
-                            sm.setSelectState("All");
+                            var grid = Ext.getCmp('events_grid');
+                            grid.selectAll();
+                            // sm = grid.getSelectionModel();
+                            // sm.selectEventState('All');
+                            // sm.setSelectState("All");
                         }
                     },{
                         text: 'None',
                         handler: function(){
                             var grid = Ext.getCmp('events_grid'),
-                            sm = grid.getSelectionModel();
-                            sm.clearSelections();
-                            sm.clearSelectState();
+                                sm = grid.getSelectionModel();
+                            sm.clearSelections(); //???
+                            sm.deselectAll();
+                            if (sm.clearSelectState) { //TODO:??
+                                sm.clearSelectState();
+                            }
                         }
                     }
                     ]
@@ -298,15 +302,18 @@ Ext.onReady(function(){
     var console_selection_model;/* = new Zenoss.EventPanelSelectionModel({
     });*/
 
-    var createEventHistoryGrid = function ()
-    {
+    var createEventHistoryGrid = function () {
         var master_panel = Ext.getCmp('master_panel');
         var tbar = createBar();
 
-        var archive_store = Ext.create('Zenoss.events.Store', {directFn: Zenoss.remote.EventsRouter.queryArchive} );
-        if (!Zenoss.settings.enableInfiniteGridForEvents) {
-            archive_store.buffered = false;
-        }
+        /*var archive_store;// = Ext.create('Zenoss.events.Store', {directFn: Zenoss.remote.EventsRouter.queryArchive} );
+        if (Zenoss.settings.enableInfiniteGridForEvents) {
+            archive_store = Ext.create('Zenoss.events.BufferedStore', {directFn: Zenoss.remote.EventsRouter.queryArchive});
+        } else {
+            archive_store = Ext.create('Zenoss.events.DirectStore', {directFn: Zenoss.remote.EventsRouter.queryArchive});
+        }*/
+        var archive_store = Zenoss.getEventStore({directFn: Zenoss.remote.EventsRouter.queryArchive});
+
         var grid = Ext.create('Zenoss.events.Grid', {
             region: 'center',
             tbar: tbar,
@@ -334,9 +341,14 @@ Ext.onReady(function(){
                 fn: toggleEventDetailContent
             }],
             displayTotal: false,
-            selModel: new Zenoss.EventPanelSelectionModel({
+            /*selModel: new Zenoss.EventPanelSelectionModel({
                 gridId: 'events_grid'
-            }) // defined above
+            }) // defined above*/
+            selModel: {
+                selType: 'rowmodel',
+                mode: 'MULTI',
+                pruneRemoved: false
+            }
 
         });
         console_selection_model = grid.getSelectionModel();

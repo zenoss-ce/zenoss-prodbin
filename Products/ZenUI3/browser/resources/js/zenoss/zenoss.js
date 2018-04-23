@@ -473,7 +473,6 @@ Zenoss.PlaceholderPanel = Ext.extend(Ext.Panel, {
  * several screens, including the event console.
  * @constructor
  */
-
 Ext.define('Zenoss.LargeToolbar',{
     alias: 'widget.largetoolbar',
     extend: 'Ext.toolbar.Toolbar',
@@ -486,6 +485,7 @@ Ext.define('Zenoss.LargeToolbar',{
 Ext.define('Zenoss.SingleRowSelectionModel', {
     extend: 'Ext.selection.RowModel',
     mode: 'SINGLE',
+    pruneRemoved: false,
     getSelected: function() {
         var rows = this.getSelection();
         if (!rows.length) {

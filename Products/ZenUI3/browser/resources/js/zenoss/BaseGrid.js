@@ -63,13 +63,14 @@
         }
     });
 
-     Ext.define('Zenoss.DirectBufferedStore', { //TODO: test this in grids;
+     Ext.define('Zenoss.DirectBufferedStore', {
          mixins: ['Zenoss.StoreBase'],
          extend: 'Ext.data.BufferedStore',
          alias: 'store.zendirectbufferedstore',
 
          remoteSort: true,
          pageSize: 50,
+         leadingBufferZone: 300,
 
          constructor: function (config) {
             config = config || {};
@@ -147,6 +148,7 @@
     Ext.define('Zenoss.NonPaginatedStore', {
         extend: 'Zenoss.Store',
         alias: ['store.directcombo'],
+        isDirectComboStore: true,
         constructor: function (config) {
             config = config || {};
             Ext.applyIf(config, {
@@ -681,7 +683,7 @@
             Ext.applyIf(viewConfig, {
                 autoScroll: false,
                 stripeRows: true,
-                loadMask: false,
+                // loadMask: false,
                 preserveScrollOnRefresh: true
             });
 
@@ -690,6 +692,9 @@
                 viewConfig: viewConfig
             });
             this.callParent([config]);
+            this.getStore().on("load", function() {
+                this.getSelectionModel().deselectAll();
+            }, this);
             /*var after_request = function () {
                 if (!this._disableSavedSelection) {
                     this.applySavedSelection();
@@ -805,6 +810,14 @@
             }
             // this.saveSelection();
             this.getStore().load();
+        },
+        selectAll: function() {
+            var sm = this.getSelectionModel();
+            if (this.store.buffered) {
+                sm.select(this.bufferedRenderer.getViewRange());
+            } else {
+                sm.selectAl();
+            }
         }
     });
 
@@ -820,7 +833,7 @@
         alias: ['widget.basegridpanel'],
         constructor: function (config) {
             Ext.applyIf(config, {
-                verticalScrollerType: 'paginggridscroller',
+                // verticalScrollerType: 'paginggridscroller',
                 invalidateScrollerOnRefresh: false,
                 scroll: 'both',
                 /*verticalScroller: {
@@ -842,30 +855,31 @@
             this.headerCt.on('columnshow', this.onColumnChange, this);
 
             this.refresh_in_progress = 0;
+            var store = this.getStore();
 
-            // if (this.getStore().buffered) {
-            //     this.getStore().on('beforeprefetch', this.before_request, this);
-            //     this.getStore().on("afterguaranteedrange", this.after_request, this);
-            // } else {
+            /*if (this.getStore().buffered) {
+                this.getStore().on('beforeprefetch', this.before_request, this);
+                // this.getStore().on("afterguaranteedrange", this.after_request, this);
+                this.getStore().on("prefetch", this.after_request, this);
+            } else {
                 this.getStore().on('beforeload', this.before_request, this);
                 this.getStore().on("load", this.after_request, this);
-            // }
+            }*/
 
             var paging_tb = this.down('pagingtoolbar');
             if (paging_tb) {
                 // If we have an infinite grid or NonPagination store we hide the paging toolbar
-                if (this.getStore().buffered || this.getStore().alias[0] === "store.directcombo") {
+                if (store.buffered || store.isDirectComboStore) {
                     paging_tb.hide();
                 }
                 else {
                     paging_tb.on('beforechange', this.scrollToTop, this);
-                    paging_tb.bindStore(this.getStore());
+                    paging_tb.bindStore(store);
                     paging_tb.down('#refresh').hide();
                 }
             }
         },
         before_request: function () {
-            this.setLoading(true);
             if (this.getStore().buffered) {
                 this.refresh_in_progress = 1;
             }
@@ -874,7 +888,6 @@
             }
         },
         after_request: function () {
-            this.setLoading(false);
             if (this.refresh_in_progress > 0) {
                 this.refresh_in_progress -= 1;
             }
@@ -921,20 +934,12 @@
                 });
             } else {
                 // need to refresh the current rows, without changing the scroll position
-                var start = Math.max(store.lastRequestStart, 0),
+                var start = this.bufferedRenderer.getFirstVisibleRowIndex(),
                     end = Math.min(start + store.pageSize - 1, store.totalCount),
-                    page = store.pageMap.getPageFromRecordIndex(end);
+                    page = store.getPageFromRecordIndex(start);
                 // make sure we do not have any records in cache
-                store.pageMap.removeAtKey(page);
-
-                // If a refresh kicks off before the initial store load store.totalCount is NaN
-                if (isNaN(store.totalCount)) {
-                    end = start + store.pageSize - 1;
-                }
-
-                if (store.getCount() >= store.getTotalCount() && this.verticalScroller) {
-                    start = this.verticalScroller.getFirstVisibleRowIndex();
-                }
+                store.data.removeAtKey(page);
+                delete store.data.map[page];
 
                 // this will fetch from the server and update the view since we removed it from cache
                 if (Ext.isFunction(callback)) {
@@ -995,7 +1000,6 @@
                 appendGlob: this.appendGlob,
                 defaultFilters: this.defaultFilters || {}
             });
-
             this.filterRow = filters;
         },
         getState: function () {
@@ -1053,9 +1057,9 @@
         extend: 'Ext.toolbar.TextItem',
         alias: ['widget.livegridinfopanel'],
         cls: 'livegridinfopanel',
+
         constructor: function (config) {
             this.emptyMsg = _t('NO RESULTS');
-            this.firstRender = true;
             config = config || {};
             Ext.applyIf(config, {
                 text: this.emptyMsg
@@ -1068,6 +1072,7 @@
                     this.grid = Ext.getCmp(this.grid);
                 }
                 this.view = this.grid.getView();
+                this.grid.on('render', this.updateRowText, this);
                 // We need to refresh this when one of two events happen:
                 //  1.  The data in the data store changes
                 //  2.  The user scrolls.
@@ -1077,17 +1082,17 @@
                 */
                 var store = this.grid.getStore();
                 if (store.buffered) {
-                    store.on('guaranteedrange', this.onDataChanged, this);
+                    store.on('prefetch', this.onDataChanged, this);
                 }
                 else {
                     store.on('load', this.onDataChanged, this);
                 }
-                this.view.on('bodyscroll', this.onScroll, this);
+                this.view.on('scroll', this.onScroll, this, {buffer: 250});
                 // this.view.on('resize', this.onResize, this);
             }
-            this.lastScrollLeft = 0;
-            this.rowHeight = null;
-            this.visibleRows = null;
+            // this.lastScrollLeft = 0;
+            // this.rowHeight = null;
+            // this.visibleRows = null;
             this.displayMsg = _t('DISPLAYING {0} - {1} of {2} ROWS');
             this.callParent(arguments);
         },
@@ -1095,7 +1100,7 @@
             this.visibleRows = null;
             this.onScroll();
             Zenoss.util.refreshScrollPosition(this);
-        },*/
+        },
         getNumberOfVisibleRows: function () {
             if (this.visibleRows) {
                 return this.visibleRows;
@@ -1135,16 +1140,16 @@
                 return Math.ceil(scrollTop / this.rowHeight);
             }
             // ask the scroller, if the store is paginated
-            if (this.grid.verticalScroller && this.grid.verticalScroller.getFirstVisibleRowIndex && this.grid.getStore().buffered) {
-                var start = this.grid.verticalScroller.getFirstVisibleRowIndex();
+            if (this.grid.bufferedRenderer) {
+                var start = this.grid.bufferedRenderer.getFirstVisibleRowIndex();
                 if (start) {
                     return start;
                 }
             }
             return 0;
-        },
+        },*/
         onDataChanged: function () {
-            this.totalCount = this.grid.getStore().getTotalCount();
+            this.totalCount = this.grid.store.getCount();
             if (!this.totalCount) {
                 this.setText(this.emptyMsg);
             } else {
@@ -1152,20 +1157,6 @@
             }
         },
         onScroll: function (e, t) {
-            // introduce a small delay so that we are
-            // are not constantly updating the text when they are scrolling like crazy
-            if (!this.onScrollTask || this.firstRender) {
-                this.onScrollTask = new Ext.util.DelayedTask(this._doOnScroll, this);
-            }
-            this.onScrollTask.delay(250);
-        },
-        setText: function (text) {
-            if (text !== this.text) {
-                this.callParent(arguments);
-            }
-        },
-        _doOnScroll: function () {
-            // ext will fire the scroll event sometimes before the data is even set
             if (!this.totalCount) {
                 return this.setText(this.emptyMsg);
             }
@@ -1174,8 +1165,20 @@
             }
             this.updateRowText();
         },
+        setText: function (text) {
+            if (text !== this.text) {
+                this.callParent(arguments);
+            }
+        },
         updateRowText: function () {
-            var pagingScroller = this.grid.verticalScroller;
+            var store = this.grid.getStore();
+            if (this.grid.rendered && store.getCount()) {
+                var start = Math.max(this.grid.bufferedRenderer.getFirstVisibleRowIndex(), 0)+1,
+                    lastRow = this.grid.bufferedRenderer.getLastVisibleRowIndex()+1,
+                    end = Math.min((lastRow < 0 ? 0 : lastRow), this.totalCount),
+                    msg = Ext.String.format(this.displayMsg, start, end, this.totalCount);
+                this.setText(msg);
+            /*var pagingScroller = this.grid.verticalScroller;
             if (pagingScroller) {
                 var start = Math.max(this.getStartCount(), 0),
                     end = Math.min(this.getEndCount(start), this.totalCount),
@@ -1204,12 +1207,10 @@
                     this.view.el.dom.scrollLeft += 1;
                     this.setText(msg);
                     this.view.el.dom.scrollLeft -= 1;
-                }
+                }*/
             } else {
                 // Drat, we didn't have the paging scroller, so assume we are showing all
-                var showingAllMsg = _t('Found {0} records');
-                msg = Ext.String.format(showingAllMsg, this.totalCount);
-                this.setText(msg);
+                this.setText(Ext.String.format(_t('Found {0} records'), this.totalCount));
             }
         }
     });

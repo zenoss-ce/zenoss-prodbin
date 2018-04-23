@@ -18,8 +18,7 @@
     *
     */
 
-    zs.addClassHandler = function(newId)
-    {
+    zs.addClassHandler = function(newId) {
         var grid = Ext.getCmp('navGrid'),
             store = grid.getStore(),
             params;
@@ -59,7 +58,8 @@
             callback = function(p, response){
                 var result = response.result;
                 if (result.success) {
-                    grid.getSelectionModel().clearSelections();
+                    grid.getSelectionModel().clearSelections(); //???
+                    grid.getSelectionModel().deselectAll();
                     store.on('load', function(){
                         grid.filterRow.clearFilters();
                         if(!selected.index) {

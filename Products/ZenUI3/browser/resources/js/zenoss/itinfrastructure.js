@@ -1708,10 +1708,11 @@ Ext.onReady(function () {
     });
 
     var createEventsGrid = function (re_attach_to_container) {
-        var events_store = Ext.create('Zenoss.events.Store', {});
+        /*var events_store = Ext.create('Zenoss.events.BufferedStore', {});
         if (!Zenoss.settings.enableInfiniteGridForEvents) {
             events_store.buffered = false;
-        }
+        }*/
+        var events_store = Zenoss.getEventStore();
         var event_console = Ext.create('Zenoss.EventGridPanel', {
             id: 'events_grid',
             stateId: 'infrastructure_events',

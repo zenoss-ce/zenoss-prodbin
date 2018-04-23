@@ -44,10 +44,13 @@ Ext.onReady(function(){
     });*/
 
     var createEventConsoleGrid = function() {
-        var console_store = Ext.create('Zenoss.events.Store', {});
-        if (!Zenoss.settings.enableInfiniteGridForEvents) {
-            console_store.buffered = false;
-        }
+        /*var console_store;// = Ext.create('Zenoss.events.Store', {});
+        if (Zenoss.settings.enableInfiniteGridForEvents) {
+            console_store = Ext.create('Zenoss.events.BufferedStore', {});
+        } else {
+            console_store = Ext.create('Zenoss.events.DirectStore', {});
+        }*/
+        var console_store = Zenoss.getEventStore();
 
         console_store.on('afterguaranteedrange', updateTitle);
         console_store.on('load', updateTitle);
@@ -61,10 +64,10 @@ Ext.onReady(function(){
                 hideDisplayCombo: true,
                 newwindowBtn: false
             }),
-            plugins: {
-                gridfilters: true
+            // plugins: {
+                // gridfilters: true
                 // gridexporter: true
-            },
+            // },
             appendGlob: true,
             defaultFilters: {
                 severity: [Zenoss.SEVERITY_CRITICAL, Zenoss.SEVERITY_ERROR, Zenoss.SEVERITY_WARNING, Zenoss.SEVERITY_INFO],
@@ -89,9 +92,16 @@ Ext.onReady(function(){
                 key: Ext.event.Event.ENTER,
                 fn: toggleEventDetailContent
             }],
+            /*
             selModel: Ext.create('Zenoss.EventPanelSelectionModel', {
                 gridId: 'events_grid'
             }),//console_selection_model, // defined above
+            */
+            selModel: {
+                selType: 'rowmodel',
+                mode: 'MULTI',
+                pruneRemoved: false
+            },
             enableTextSelection: true
         });
         console_selection_model = grid.getSelectionModel();

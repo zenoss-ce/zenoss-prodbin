@@ -202,7 +202,7 @@ Ext.override(Ext.util.Sorter, {
      To Fix this I have to override the Ext.selection.Model to handle the top down versus bottom up selection.
      *
      */
-    Ext.override(Ext.selection.Model, {
+    // Ext.override(Ext.selection.Model, {
         /**
          * Selects a range of rows if the selection model {@link #isLocked is not locked}.
          * All rows in between startRow and endRow are also selected.
@@ -210,7 +210,7 @@ Ext.override(Ext.util.Sorter, {
          * @param {Ext.data.Model/Number} endRow The record or index of the last row in the range
          * @param {Boolean} keepExisting (optional) True to retain existing selections
          */
-        selectRange : function(startRow, endRow, keepExisting, dir){
+        /*selectRange : function(startRow, endRow, keepExisting, dir){
             var me = this,
                 store = me.store,
                 selectedCount = 0,
@@ -283,7 +283,7 @@ Ext.override(Ext.util.Sorter, {
             me.doMultiSelect(records, true);
         }
     });
-
+*/
     /**
      * This is a workaround to make sure the node isn't null as it has happened
      * to be on occasion. These only affect the UI class switches.
@@ -393,7 +393,7 @@ Ext.override(Ext.util.Sorter, {
      *  Fixes a bug in Ext where when the store is canceling
      *  requests and there are not any outstanding requests.
      **/
-    Ext.override(Ext.data.Store, {
+    /*Ext.override(Ext.data.Store, {
         onPageMapClear: function() {
             var me = this,
             reqs = me.pageRequests,
@@ -420,7 +420,7 @@ Ext.override(Ext.util.Sorter, {
             }
         }
 
-    });
+    });*/
 
     /**
      *  Fixes a bug in Ext: they forgot to make the flashParams actually work
@@ -458,7 +458,7 @@ Ext.override(Ext.util.Sorter, {
         going to do that yet, so here's a work-around. Not going to bother with browser sniffing since this
          == null should only happen happen in IE anyway.
     */
-    Ext.EventObjectImpl.prototype.getTarget = function (selector, maxDepth, returnEl) {
+    /*Ext.EventObjectImpl.prototype.getTarget = function (selector, maxDepth, returnEl) {
         if (this.target === null) {
             return null;
         }
@@ -466,7 +466,7 @@ Ext.override(Ext.util.Sorter, {
             return Ext.fly(this.target).findParent(selector, maxDepth, returnEl);
         }
         return returnEl ? Ext.get(this.target) : this.target;
-    };
+    };*/
 
     Ext.override(Ext.grid.column.Column, {
         defaultRenderer: Ext.htmlEncode
@@ -608,13 +608,13 @@ Ext.override(Ext.util.Sorter, {
         result.second(sourceMoment.second());
         result.millisecond(sourceMoment.millisecond());
         return result;
-    }
+    };
 
     /**
      * Override the date selector to return dates in the current users
      * timezone.
      **/
-    Ext.override(Ext.form.field.Date, {
+    /*Ext.override(Ext.form.field.Date, {
         getUnixTimestamp: function() {
             var date = this.getValue();
             if (!date) {
@@ -622,7 +622,7 @@ Ext.override(Ext.util.Sorter, {
             }
             return toMomentInTimezone(moment(date), Zenoss.USER_TIMEZONE).unix();
         }
-    });
+    });*/
 
     /**
      * Override the default behavior of moment-timezone to
@@ -836,7 +836,7 @@ Ext.override(Ext.util.Sorter, {
             }
         }
     });
-
+/*
     Ext.define('EXTJSIV-6824.selection.Model', {
         override: 'Ext.selection.Model',
         selectWithEvent: function(record, e, keepExisting) {
@@ -1046,7 +1046,7 @@ Ext.override(Ext.util.Sorter, {
             me.doMultiSelect(toSelect, true);
         }
     });
-
+*/
     /*
         Override store pageMap class add/remove functionality.
         For buffered store if it has many pages relations between pages(prev/next) in map
