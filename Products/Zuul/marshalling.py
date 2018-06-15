@@ -9,8 +9,9 @@
 
 
 from zope.interface import implements
-from zope.component import adapts
+from zope.component import adapts, getUtility
 from Products.ZenUtils.jsonutils import json
+from Products.ZenUtils.virtual_root import IVirtualRoot
 from Products.Zuul.interfaces import IMarshallable
 from Products.Zuul.interfaces import IMarshaller
 from Products.Zuul.interfaces import IUnmarshaller
@@ -38,6 +39,10 @@ def _marshalImplicitly(obj):
     data = {}
     for key in getPublicProperties(obj):
         value = getattr(obj, key)
+
+        if 'uid' in key:
+            value = getUtility(IVirtualRoot).ensure_virtual_root(value)
+
         data[key] = value
     return data
 
@@ -56,6 +61,8 @@ def _marshalExplicitly(obj, keys):
         else:
             if callable(value):
                 value = value()
+            if 'uid' in key:
+                value = getUtility(IVirtualRoot).ensure_virtual_root(value)
             data[key] = value
     return data
 
