@@ -2253,6 +2253,10 @@ BYE BYE BORDERS
         background-color: transparent;
     }
 
+    .z-cse .x-panel-log-file-contents .log-file-contents-item:nth-child(odd) {
+        color: #4b4b4c;
+    }
+
 /*
         =====================================================================================
         DARK THEME
@@ -2929,4 +2933,8 @@ BYE BYE BORDERS
     .z-cse.z-cse-dark .inspector span.status-up,
     .z-cse.z-cse-dark .inspector .inspector-body .inspector-property .inspector-property-value div {
         color: #5a5a5a;
+    }
+
+    .z-cse.z-cse-dark .x-panel-log-file-contents .log-file-contents-item:nth-child(odd) {
+        color: #ccc;
     }

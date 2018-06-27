@@ -10232,3 +10232,26 @@ CORE TRIGGER PAGE STUFF
   padding: 8px;
   background-color: #fff;
 }
+
+.x-panel-log-file-contents .log-file-contents-item {
+  font-family: Monaco,monospaced;
+  font-size: 12px;
+}
+
+.x-panel-log-file-contents .log-file-contents-item:nth-child(odd) {
+  color: #657B83;
+}
+
+.x-panel-log-file-contents .log-file-contents-item:nth-child(even) {
+  color: #b58900;
+}
+
+.x-panel-log-file-contents .log-file-contents-item.error {
+  color: red;
+}
+
+.x-panel-log-file-contents .log-file-limit {
+  color: red;
+  padding-bottom: 8px;
+  display: block;
+}
