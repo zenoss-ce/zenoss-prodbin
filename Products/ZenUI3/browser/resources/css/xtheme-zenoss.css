@@ -10227,3 +10227,8 @@ CORE TRIGGER PAGE STUFF
 #searchInput-inputEl {
   margin-top: 5px !important;
   padding-left: 30px !important; }
+
+.x-window-job-log .x-panel-log-file-contents {
+  padding: 8px;
+  background-color: #fff;
+}

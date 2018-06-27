@@ -2249,6 +2249,10 @@ BYE BYE BORDERS
       visibility: hidden;
     }
 
+    .z-cse .x-window-job-log .x-panel-log-file-contents {
+        background-color: transparent;
+    }
+
 /*
         =====================================================================================
         DARK THEME

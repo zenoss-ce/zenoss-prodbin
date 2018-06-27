@@ -20,10 +20,12 @@
                 //maximized: true,
                 title: Ext.String.format("Log for Add Device: {0}", config.deviceName),
                 autoScroll: true,
+                cls: 'x-window-job-log',
+                layout: 'fit',
                 items: [{
                     xtype: 'panel',
                     ref: 'logfilecontents',
-                    bodyStyle: 'padding:8px;background:#fff;overflow:scroll',
+                    cls: 'x-panel-log-file-contents',
                     autoScroll: true
                 }],
                 buttons: [{
