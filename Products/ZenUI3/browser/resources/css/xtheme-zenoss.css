@@ -10238,11 +10238,11 @@ CORE TRIGGER PAGE STUFF
   font-size: 12px;
 }
 
-.x-panel-log-file-contents .log-file-contents-item:nth-child(odd) {
+.x-panel-log-file-contents .log-file-contents-item:nth-of-type(odd) {
   color: #657B83;
 }
 
-.x-panel-log-file-contents .log-file-contents-item:nth-child(even) {
+.x-panel-log-file-contents .log-file-contents-item:nth-of-type(even) {
   color: #b58900;
 }
 

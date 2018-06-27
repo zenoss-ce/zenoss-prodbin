@@ -2253,7 +2253,7 @@ BYE BYE BORDERS
         background-color: transparent;
     }
 
-    .z-cse .x-panel-log-file-contents .log-file-contents-item:nth-child(odd) {
+    .z-cse .x-panel-log-file-contents .log-file-contents-item:nth-of-type(odd) {
         color: #4b4b4c;
     }
 
@@ -2935,6 +2935,6 @@ BYE BYE BORDERS
         color: #5a5a5a;
     }
 
-    .z-cse.z-cse-dark .x-panel-log-file-contents .log-file-contents-item:nth-child(odd) {
+    .z-cse.z-cse-dark .x-panel-log-file-contents .log-file-contents-item:nth-of-type(odd) {
         color: #ccc;
     }
