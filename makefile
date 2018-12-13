@@ -44,6 +44,8 @@ DOCKER_RUN := docker run --rm \
 		$(BUILD_IMAGE_TAG) \
 		/bin/bash -c
 
+IN_DOCKER = 1
+
 .PHONY: all clean build javascript zensocket
 
 include javascript.mk

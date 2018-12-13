@@ -20,7 +20,11 @@ $(WHEEL_ARTIFACT): build-version-wheel
 build-version-wheel: generate-zversion
 	@echo "Building a binary distribution of zenoss-version"
 	sed -e 's/%VERSION%/$(VERSION)/g' $(ZENOSS_VERSION_BASE)/setup.py.in > $(ZENOSS_VERSION_BASE)/setup.py
-	$(DOCKER_RUN) "cd /mnt/$(ZENOSS_VERSION_BASE) && python setup.py bdist_wheel"
+	if [ -n "$(IN_DOCKER)" ]; then \
+		$(DOCKER_RUN) "cd /mnt/$(ZENOSS_VERSION_BASE) && python setup.py bdist_wheel"; \
+	else \
+		cd $(ZENOSS_VERSION_BASE) && python setup.py bdist_wheel; \
+	fi
 
 generate-zversion: generate-zmigrateversion
 	@echo "generating ZVersion.py"

@@ -47,4 +47,8 @@ clean-javascript:
 
 build-javascript:
 	@echo "Minifying $(ZENOSS_SRC_BASEDIR) -> $(JS_OUTPUT_DIR)/$(JSB_COMPILED_JS_NAME)"
-	$(DOCKER_RUN) "cd /mnt && java -jar $(JSBUILDER) -p $(ZENOSS_JSB_FILE) -d $(ZENOSS_JS_BASEDIR) -v"
+	if [ -n "$(IN_DOCKER)" ]; then \
+		$(DOCKER_RUN) "cd /mnt && java -jar $(JSBUILDER) -p $(ZENOSS_JSB_FILE) -d $(ZENOSS_JS_BASEDIR) -v"; \
+	else \
+		java -jar $(JSBUILDER) -p $(ZENOSS_JSB_FILE) -d $(ZENOSS_JS_BASEDIR) -v; \
+	fi
